@@ -1,0 +1,220 @@
+# API REST de tareas
+
+Esta guía explica cómo está construido el CRUD de tareas y **por qué** se ha
+hecho así. El objetivo es que puedas defenderlo en una entrevista y modificarlo
+sin miedo.
+
+## 1. Estructura
+
+```text
+com.taskflow
+├─ task/
+│  ├─ Tarea.java                    Entidad JPA (tabla tareas)
+│  ├─ Prioridad.java                Enum BAJA, MEDIA, ALTA
+│  ├─ Estado.java                   Enum PENDIENTE, EN_PROCESO, COMPLETADA
+│  ├─ TareaRepository.java          Spring Data JPA
+│  ├─ TareaService.java             Reglas de negocio y transacciones
+│  ├─ TareaNoEncontradaException    Error de negocio → 404
+│  ├─ TareaController.java          API REST
+│  └─ dto/
+│     ├─ TareaRequest.java          Lo que entra
+│     └─ TareaResponse.java         Lo que sale
+└─ common/
+   ├─ ErrorResponse.java            Formato único de error
+   └─ GlobalExceptionHandler.java   Excepciones → HTTP
+```
+
+**Flujo de una petición**: `Controller → Service → Repository → MySQL`. El
+controlador no tiene reglas de negocio y el servicio no sabe qué es HTTP. Así
+cada capa se puede probar y cambiar por separado.
+
+## 2. La entidad `Tarea`
+
+```java
+@Entity
+@Table(name = "tareas")
+public class Tarea {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    ...
+}
+```
+
+Decisiones:
+
+- **`IDENTITY`** porque la tabla usa `AUTO_INCREMENT`. Hibernate pide el id a
+  MySQL al insertar y no necesita secuencias (que MySQL no tiene).
+- **`@Enumerated(EnumType.STRING)`**: en la base de datos se guarda `'ALTA'`, no
+  `2`. Si se guardara el ordinal, reordenar el enum corrompería los datos
+  existentes.
+- **`LocalDate` para `fechaLimite`** porque el requisito es una fecha, no una
+  hora. `LocalDateTime` para las marcas de tiempo.
+- **`LocalDateTime` en UTC y recortado a segundos**: la columna es
+  `TIMESTAMP` (sin fracciones). Si se guardaran nanosegundos, la respuesta del
+  `POST` y un `GET` posterior darían valores distintos. `truncatedTo(SECONDS)`
+  hace que la API devuelva exactamente lo que hay en la base de datos.
+- **`@PrePersist` / `@PreUpdate`** rellenan `creadoEn` y `actualizadoEn`. Se
+  podría usar `@CreationTimestamp`/`@UpdateTimestamp` de Hibernate, pero así el
+  comportamiento está a la vista al leer la clase.
+- **`estado` por defecto `PENDIENTE`** en `@PrePersist`: una tarea nueva sin
+  estado explícito no puede quedar en `null`.
+- **Constructor `protected Tarea()`**: lo exige JPA. El constructor público
+  recibe los datos de negocio.
+
+La tabla **ya existía** (`V1`, adaptada por `V2`). No se ha creado ninguna
+migración nueva: las columnas y restricciones `CHECK` actuales ya validan
+prioridad y estado.
+
+## 3. El repositorio
+
+```java
+public interface TareaRepository extends JpaRepository<Tarea, Long> {
+    List<Tarea> findAllByOrderByIdAsc();
+    List<Tarea> findByEstadoOrderByIdAsc(Estado estado);
+    List<Tarea> findByPrioridadOrderByIdAsc(Prioridad prioridad);
+    List<Tarea> findByEstadoAndPrioridadOrderByIdAsc(Estado estado, Prioridad prioridad);
+}
+```
+
+Se usan **consultas derivadas**: Spring Data genera el SQL a partir del nombre
+del método. No hace falta escribir JPQL para algo tan simple.
+
+**Por qué cuatro métodos y no uno con parámetros opcionales**: con un
+`WHERE (:estado IS NULL OR ...)` el SQL es más corto, pero el planificador no
+siempre usa bien el índice con parámetros nulos y el resultado es más difícil de
+leer. El servicio elige uno de los cuatro según los filtros; siempre se ejecuta
+la consulta exacta que toca.
+
+Todas ordenan por `id` ascendente para que el resultado sea predecible.
+
+## 4. El servicio
+
+- `@Transactional(readOnly = true)` en la clase: las lecturas no abren
+  transacción de escritura.
+- `@Transactional` en `crear`, `actualizar` y `eliminar`: si algo falla, no se
+  guarda nada a medias.
+- `actualizar` **no llama a `save()`**: la entidad ya está gestionada por JPA y
+  Hibernate detecta los cambios (*dirty checking*) al hacer commit. Es una de
+  las ventajas de JPA que conviene saber explicar.
+- Si no se envía `estado` al actualizar, se conserva el actual. Así se puede
+  editar el título sin reenviar todo.
+- `limpiar()` quita espacios y convierte `"   "` en `null`: una descripción vacía
+  se guarda como ausente, no como cadena vacía.
+
+## 5. DTOs y validación
+
+`TareaRequest` (entrada):
+
+| Campo | Validación |
+|---|---|
+| `titulo` | `@NotBlank`, máximo 120 |
+| `descripcion` | máximo 2000, opcional |
+| `prioridad` | `@NotNull` |
+| `estado` | opcional |
+| `fechaLimite` | opcional |
+
+`TareaResponse` (salida) incluye `id`, `creadoEn` y `actualizadoEn`.
+
+**Por qué no devolver la entidad directamente**: si mañana se añade una columna
+interna, aparecería en el JSON sin querer. El DTO fija el contrato de la API y
+evita aceptar campos que el cliente no debe enviar (por ejemplo, un `id` en el
+`POST`).
+
+Las validaciones con Bean Validation devuelven `400` y un mapa `campos` con el
+mensaje de cada campo, para que el frontend pueda marcar los errores.
+
+## 6. El controlador
+
+| Método | Ruta | Código | Nota |
+|---|---|---|---|
+| `GET` | `/api/tareas` | `200` | Acepta `?estado=` y `?prioridad=` |
+| `GET` | `/api/tareas/{id}` | `200` / `404` | |
+| `POST` | `/api/tareas` | `201` | Cabecera `Location` con la URL de la tarea creada |
+| `PUT` | `/api/tareas/{id}` | `200` / `404` | Actualización completa |
+| `DELETE` | `/api/tareas/{id}` | `204` / `404` | Sin cuerpo |
+
+`201 Created` + `Location` es la respuesta correcta al crear un recurso, no
+`200`. `204 No Content` es la correcta al borrar.
+
+Los filtros son parámetros opcionales: si se envía un valor que no existe (por
+ejemplo `?estado=URGENTE`), Spring no puede convertirlo al enum y el manejador
+global responde `400` con un mensaje claro.
+
+## 7. Errores
+
+Todas las respuestas de error usan `ErrorResponse`:
+
+```json
+{
+  "timestamp": "2026-11-17T10:00:00Z",
+  "status": 404,
+  "error": "Not Found",
+  "mensaje": "No existe ninguna tarea con id 7",
+  "ruta": "/api/tareas/7"
+}
+```
+
+`GlobalExceptionHandler` traduce:
+
+| Excepción | HTTP |
+|---|---|
+| `TareaNoEncontradaException` | `404` |
+| `MethodArgumentNotValidException` | `400` + `campos` |
+| `HttpMessageNotReadableException` (JSON o enum inválido) | `400` |
+| `MethodArgumentTypeMismatchException` (filtro inválido) | `400` |
+| `HttpRequestMethodNotSupportedException` | `405` |
+| `HttpMediaTypeNotSupportedException` | `415` |
+| `NoResourceFoundException` (ruta inexistente) | `404` |
+| Cualquier otra | `500` genérico |
+
+**Nunca** se devuelve el mensaje de una excepción interna ni una traza: el
+detalle va al log del servidor y el cliente recibe un mensaje genérico. Es la
+misma razón por la que `server.error.include-message` está en `never`.
+
+## 8. Ejemplos con curl
+
+```bash
+# Crear
+curl -i -X POST http://localhost:8080/api/tareas \
+  -H "Content-Type: application/json" \
+  -d '{"titulo":"Preparar entrega","prioridad":"ALTA","fechaLimite":"2026-12-31"}'
+
+# Listar y filtrar
+curl http://localhost:8080/api/tareas
+curl "http://localhost:8080/api/tareas?estado=PENDIENTE&prioridad=ALTA"
+
+# Actualizar (PUT completo)
+curl -X PUT http://localhost:8080/api/tareas/1 \
+  -H "Content-Type: application/json" \
+  -d '{"titulo":"Entrega lista","prioridad":"MEDIA","estado":"COMPLETADA"}'
+
+# Borrar
+curl -i -X DELETE http://localhost:8080/api/tareas/1
+```
+
+## 9. Tests
+
+| Test | Nivel | Qué cubre |
+|---|---|---|
+| `TareaRepositoryTest` | repositorio + H2 | Guardar, recuperar y los cuatro filtros |
+| `TareaServiceTest` | servicio + H2 | Estado por defecto, normalización, actualización, 404, borrado |
+| `TareaControllerTest` | API completa (MockMvc) | Códigos HTTP, JSON, validación, filtros y errores |
+
+Los tests usan H2 en memoria con el **mismo esquema** que MySQL (Flyway aplica
+`V1` y `V2`). Cada test es transaccional y se revierte, así que no dependen del
+orden ni dejan datos.
+
+La suma total del proyecto es **34 tests** (los 4 que ya existían de las fases
+anteriores incluidos).
+
+## 10. Limitaciones conocidas
+
+- **Sin paginación**: `GET /api/tareas` devuelve todo. Para una app personal es
+  suficiente; con miles de tareas habría que añadir `Pageable`.
+- **Sin autenticación**: es una decisión de diseño (app local). No debe
+  publicarse en internet.
+- **`actualizadoEn` con resolución de segundos**: si editas dos veces en el
+  mismo segundo, la marca no cambia. Es una consecuencia de la columna
+  `TIMESTAMP` existente; cambiarla exigiría una migración.
+- **`PUT` es actualización completa**, no parcial. Un `PATCH` parcial sería una
+  mejora futura.

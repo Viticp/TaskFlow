@@ -1,0 +1,41 @@
+# Build
+target/
+*.class
+*.jar
+!/.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+logs/
+
+# Secretos y configuracion local
+.env
+.env.*
+!.env.example
+.env.local
+application-local.yml
+application-local.yaml
+*.pem
+*.key
+
+# Copias de seguridad locales (contienen datos personales)
+backups/
+*.dump
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Otros
+*.tmp
+*.bak

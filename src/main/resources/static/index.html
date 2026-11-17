@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard · TaskFlow</title>
+    <meta name="description" content="TaskFlow: gestor de tareas personales de Victor.">
+    <meta name="theme-color" content="#f5f6fa" id="meta-tema">
+    <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script>
+        // Bootstrap mínimo: aplica el tema antes de pintar para evitar el destello.
+        (function () {
+            var guardado = null;
+            try {
+                guardado = window.localStorage.getItem('taskflow-tema');
+            } catch (error) {
+                // Almacenamiento bloqueado: se usa la preferencia del sistema.
+            }
+            var prefiereOscuro = window.matchMedia
+                && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var oscuro = guardado === 'oscuro' || (guardado !== 'claro' && prefiereOscuro);
+            if (oscuro) {
+                document.documentElement.setAttribute('data-theme', 'oscuro');
+                var meta = document.getElementById('meta-tema');
+                if (meta) {
+                    meta.setAttribute('content', '#0f1420');
+                }
+            }
+        }());
+    </script>
+    <script type="module" src="/js/tema.js"></script>
+    <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+
+<a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+
+<!-- Iconos: sprite SVG embebido. No se descarga ninguna librería ni fuente. -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="icono-panel" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1.6"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.6"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.6"/>
+        <rect x="14" y="14" width="7" height="7" rx="1.6"/>
+    </symbol>
+    <symbol id="icono-tareas" viewBox="0 0 24 24">
+        <path d="M9 6h11M9 12h11M9 18h11"/>
+        <path d="m3.5 6 1.6 1.6L8 4.7"/>
+        <path d="m3.5 12 1.6 1.6L8 10.7"/>
+        <path d="m3.5 18 1.6 1.6L8 16.7"/>
+    </symbol>
+    <symbol id="icono-menu" viewBox="0 0 24 24">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+    </symbol>
+    <symbol id="icono-cerrar" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M18 6 6 18"/>
+    </symbol>
+    <symbol id="icono-mas" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14"/>
+    </symbol>
+    <symbol id="icono-editar" viewBox="0 0 24 24">
+        <path d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5 4 20Z"/>
+        <path d="m13.5 6.5 4 4"/>
+    </symbol>
+    <symbol id="icono-borrar" viewBox="0 0 24 24">
+        <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>
+        <path d="M10 11v5M14 11v5"/>
+    </symbol>
+    <symbol id="icono-calendario" viewBox="0 0 24 24">
+        <rect x="3.5" y="5" width="17" height="16" rx="2"/>
+        <path d="M3.5 10h17M8 3v4M16 3v4"/>
+    </symbol>
+    <symbol id="icono-reloj" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7.5V12l3 2"/>
+    </symbol>
+    <symbol id="icono-progreso" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="m10 8.5 6 3.5-6 3.5Z"/>
+    </symbol>
+    <symbol id="icono-completada" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="m8 12.5 2.6 2.6L16 9.6"/>
+    </symbol>
+    <symbol id="icono-bandeja" viewBox="0 0 24 24">
+        <path d="M3.5 13.5h4.2l1.8 2.5h5l1.8-2.5h4.2"/>
+        <path d="M5.6 5.5h12.8l2.1 8v4a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5v-4l2.1-8Z"/>
+    </symbol>
+    <symbol id="icono-aviso" viewBox="0 0 24 24">
+        <path d="M12 8v5M12 16.5v.5"/>
+        <circle cx="12" cy="12" r="9"/>
+    </symbol>
+    <symbol id="icono-sol" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+    </symbol>
+    <symbol id="icono-luna" viewBox="0 0 24 24">
+        <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>
+    </symbol>
+</svg>
+
+<!-- Fondo oscuro para el menú en móvil -->
+<div class="fondo-menu" data-cerrar-menu hidden></div>
+
+<!-- ============ MENÚ LATERAL ============ -->
+<aside class="menu-lateral" id="menu-lateral" aria-label="Menú principal">
+    <div class="marca">
+        <span class="marca-icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="m6 12.5 3.5 3.5L18 8"/></svg>
+        </span>
+        <span class="marca-nombre">TaskFlow</span>
+    </div>
+
+    <nav class="menu-nav" aria-label="Secciones">
+        <a class="menu-enlace" href="#/dashboard" data-vista="dashboard">
+            <svg class="icono" aria-hidden="true"><use href="#icono-panel"/></svg>
+            Dashboard
+        </a>
+        <a class="menu-enlace" href="#/tareas" data-vista="tareas">
+            <svg class="icono" aria-hidden="true"><use href="#icono-tareas"/></svg>
+            Mis tareas
+        </a>
+    </nav>
+
+    <div class="menu-pie">
+        <p class="menu-pie-texto">Uso personal · local</p>
+        <p class="menu-pie-version">TaskFlow 0.1</p>
+    </div>
+</aside>
+
+<!-- ============ CONTENIDO ============ -->
+<main class="principal">
+    <header class="barra-superior">
+        <div class="barra-interior">
+            <div class="barra-izquierda">
+                <button class="boton-icono solo-movil" id="boton-menu" type="button"
+                        aria-controls="menu-lateral" aria-expanded="false" aria-label="Abrir menú">
+                    <svg class="icono" aria-hidden="true"><use href="#icono-menu"/></svg>
+                </button>
+                <p class="fecha-hoy" id="fecha-hoy"></p>
+            </div>
+            <div class="barra-derecha">
+                <button class="cambiador-tema" id="cambiador-tema" type="button" role="switch"
+                        aria-checked="false" aria-label="Modo oscuro" title="Cambiar al modo oscuro">
+                    <span class="cambiador-pista" aria-hidden="true">
+                        <svg class="icono cambiador-icono cambiador-icono--sol"><use href="#icono-sol"/></svg>
+                        <svg class="icono cambiador-icono cambiador-icono--luna"><use href="#icono-luna"/></svg>
+                        <span class="cambiador-bola"></span>
+                    </span>
+                    <span class="cambiador-texto" aria-hidden="true">Claro</span>
+                </button>
+                <div class="usuario" title="Victor">
+                    <span class="avatar" aria-hidden="true">V</span>
+                    <span class="usuario-nombre">Victor</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="contenido" id="contenido" tabindex="-1">
+
+        <!-- ======== VISTA: DASHBOARD ======== -->
+        <section class="vista" id="vista-dashboard" aria-labelledby="titulo-dashboard">
+            <header class="cabecera-vista">
+                <h1 class="saludo" id="titulo-dashboard" tabindex="-1">¡Buenos días, Victor!</h1>
+                <p class="subtitulo">Aquí tienes el resumen de tus tareas.</p>
+            </header>
+
+            <div class="rejilla-estadisticas">
+                <article class="tarjeta-estadistica">
+                    <span class="estadistica-icono" aria-hidden="true">
+                        <svg class="icono" aria-hidden="true"><use href="#icono-reloj"/></svg>
+                    </span>
+                    <p class="estadistica-etiqueta">Pendientes</p>
+                    <p class="estadistica-valor estadistica-valor--vacio" id="contador-pendientes">–</p>
+                    <p class="estadistica-nota" id="nota-pendientes">Cargando…</p>
+                </article>
+
+                <article class="tarjeta-estadistica">
+                    <span class="estadistica-icono estadistica-icono--proceso" aria-hidden="true">
+                        <svg class="icono" aria-hidden="true"><use href="#icono-progreso"/></svg>
+                    </span>
+                    <p class="estadistica-etiqueta">En proceso</p>
+                    <p class="estadistica-valor estadistica-valor--vacio" id="contador-en-proceso">–</p>
+                    <p class="estadistica-nota" id="nota-en-proceso">Cargando…</p>
+                </article>
+
+                <article class="tarjeta-estadistica">
+                    <span class="estadistica-icono estadistica-icono--exito" aria-hidden="true">
+                        <svg class="icono" aria-hidden="true"><use href="#icono-completada"/></svg>
+                    </span>
+                    <p class="estadistica-etiqueta">Completadas</p>
+                    <p class="estadistica-valor estadistica-valor--vacio" id="contador-completadas">–</p>
+                    <p class="estadistica-nota" id="nota-completadas">Cargando…</p>
+                </article>
+            </div>
+
+            <div class="rejilla-analitica">
+                <section class="bloque bloque--analitica" aria-labelledby="titulo-progreso">
+                    <div class="bloque-cabecera">
+                        <h2 class="bloque-titulo" id="titulo-progreso">Progreso general</h2>
+                    </div>
+                    <div class="progreso">
+                        <p class="progreso-porcentaje" id="progreso-porcentaje">–</p>
+                        <p class="progreso-detalle" id="progreso-detalle">Cargando…</p>
+                    </div>
+                    <div class="progreso-pista" id="progreso-barra" role="progressbar"
+                         aria-labelledby="titulo-progreso" aria-valuemin="0" aria-valuemax="100"
+                         aria-valuenow="0">
+                        <span class="progreso-relleno" id="progreso-relleno"></span>
+                    </div>
+                    <p class="analitica-nota" id="progreso-nota">Calculando el avance…</p>
+                </section>
+
+                <section class="bloque bloque--analitica" aria-labelledby="titulo-vencimientos">
+                    <div class="bloque-cabecera">
+                        <h2 class="bloque-titulo" id="titulo-vencimientos">Vencimientos</h2>
+                    </div>
+                    <div class="rejilla-metricas">
+                        <div class="metrica metrica--vencida">
+                            <span class="metrica-valor" id="metrica-vencidas">–</span>
+                            <span class="metrica-etiqueta">Vencidas</span>
+                        </div>
+                        <div class="metrica metrica--hoy">
+                            <span class="metrica-valor" id="metrica-hoy">–</span>
+                            <span class="metrica-etiqueta">Para hoy</span>
+                        </div>
+                        <div class="metrica metrica--proximas">
+                            <span class="metrica-valor" id="metrica-proximos">–</span>
+                            <span class="metrica-etiqueta">Próximos 7 días</span>
+                        </div>
+                        <div class="metrica metrica--sin-fecha">
+                            <span class="metrica-valor" id="metrica-sin-fecha">–</span>
+                            <span class="metrica-etiqueta">Sin fecha</span>
+                        </div>
+                    </div>
+                    <p class="analitica-nota">Solo tareas sin completar.</p>
+                </section>
+            </div>
+
+            <div class="rejilla-analitica">
+                <section class="bloque bloque--analitica" aria-labelledby="titulo-prioridad">
+                    <div class="bloque-cabecera">
+                        <h2 class="bloque-titulo" id="titulo-prioridad">Distribución por prioridad</h2>
+                        <span class="analitica-insignia" id="total-prioridad">–</span>
+                    </div>
+                    <ul class="distribucion" aria-label="Tareas por prioridad">
+                        <li class="distribucion-fila" data-distribucion="prioridad" data-valor="ALTA">
+                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--alta"></span>Alta</span>
+                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--alta" data-barra></span></span>
+                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
+                        </li>
+                        <li class="distribucion-fila" data-distribucion="prioridad" data-valor="MEDIA">
+                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--media"></span>Media</span>
+                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--media" data-barra></span></span>
+                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
+                        </li>
+                        <li class="distribucion-fila" data-distribucion="prioridad" data-valor="BAJA">
+                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--baja"></span>Baja</span>
+                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--baja" data-barra></span></span>
+                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="bloque bloque--analitica" aria-labelledby="titulo-estado">
+                    <div class="bloque-cabecera">
+                        <h2 class="bloque-titulo" id="titulo-estado">Distribución por estado</h2>
+                        <span class="analitica-insignia" id="total-estado">–</span>
+                    </div>
+                    <div class="barra-apilada" id="barra-apilada-estado" aria-hidden="true">
+                        <span class="barra-apilada-segmento barra-apilada--pendiente" data-segmento="PENDIENTE"></span>
+                        <span class="barra-apilada-segmento barra-apilada--proceso" data-segmento="EN_PROCESO"></span>
+                        <span class="barra-apilada-segmento barra-apilada--completada" data-segmento="COMPLETADA"></span>
+                    </div>
+                    <ul class="distribucion" aria-label="Tareas por estado">
+                        <li class="distribucion-fila" data-distribucion="estado" data-valor="PENDIENTE">
+                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--pendiente"></span>Pendiente</span>
+                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--pendiente" data-barra></span></span>
+                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
+                        </li>
+                        <li class="distribucion-fila" data-distribucion="estado" data-valor="EN_PROCESO">
+                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--proceso"></span>En proceso</span>
+                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--proceso" data-barra></span></span>
+                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
+                        </li>
+                        <li class="distribucion-fila" data-distribucion="estado" data-valor="COMPLETADA">
+                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--completada"></span>Completada</span>
+                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--completada" data-barra></span></span>
+                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+
+            <section class="bloque bloque--analitica bloque--carga" aria-labelledby="titulo-carga">
+                <div class="bloque-cabecera">
+                    <h2 class="bloque-titulo" id="titulo-carga">Carga de los próximos 7 días</h2>
+                    <span class="analitica-insignia" id="total-carga">–</span>
+                </div>
+                <p class="analitica-nota">Tareas sin completar con fecha límite, desde mañana hasta dentro de una semana.</p>
+                <div class="carga-grafico" id="carga-grafico" role="group"
+                     aria-label="Tareas pendientes por día en los próximos 7 días"></div>
+                <p class="analitica-vacio" id="carga-vacio">Cargando…</p>
+            </section>
+
+            <section class="bloque" aria-labelledby="titulo-proximas">
+                <div class="bloque-cabecera">
+                    <h2 class="bloque-titulo" id="titulo-proximas">Próximas tareas</h2>
+                    <a class="enlace" href="#/tareas">Ver todas</a>
+                </div>
+
+                <div class="cargando" id="carga-dashboard" role="status">
+                    <span class="cargador" aria-hidden="true"></span>
+                    <span>Cargando tus tareas…</span>
+                </div>
+
+                <div class="panel-error" id="error-dashboard" role="alert" hidden>
+                    <div class="panel-error-texto">
+                        <p class="panel-error-titulo">No se pudieron cargar las tareas</p>
+                        <p id="texto-error-dashboard"></p>
+                    </div>
+                    <button class="boton boton-secundario" type="button" id="reintentar-dashboard">Reintentar</button>
+                </div>
+
+                <ul class="lista-compacta" id="lista-proximas" hidden></ul>
+
+                <div class="estado-vacio estado-vacio--compacto" id="vacio-dashboard" hidden>
+                    <span class="estado-vacio-icono" aria-hidden="true">
+                        <svg class="icono" aria-hidden="true"><use href="#icono-completada"/></svg>
+                    </span>
+                    <h2 class="estado-vacio-titulo" id="titulo-vacio-dashboard">No hay tareas pendientes</h2>
+                    <p class="estado-vacio-texto" id="texto-vacio-dashboard">Cuando crees una tarea sin completar, aparecerá aquí ordenada por fecha límite.</p>
+                    <button class="boton boton-secundario" type="button" data-abrir-crear>Crear una tarea</button>
+                </div>
+            </section>
+        </section>
+
+        <!-- ======== VISTA: MIS TAREAS ======== -->
+        <section class="vista" id="vista-tareas" aria-labelledby="titulo-tareas" hidden>
+            <header class="cabecera-vista cabecera-con-accion">
+                <div>
+                    <h1 class="titulo-vista" id="titulo-tareas" tabindex="-1">Mis tareas</h1>
+                    <p class="subtitulo">Crea, filtra y organiza lo que tienes pendiente.</p>
+                </div>
+                <button class="boton" type="button" data-abrir-crear id="boton-nueva-tarea">
+                    <svg class="icono" aria-hidden="true"><use href="#icono-mas"/></svg>
+                    Nueva tarea
+                </button>
+            </header>
+
+            <div class="barra-filtros">
+                <div class="grupo-filtros" role="group" aria-label="Filtrar por estado">
+                    <span class="grupo-titulo">Estado</span>
+                    <button class="chip" type="button" data-filtro-estado="" aria-pressed="true">Todas</button>
+                    <button class="chip" type="button" data-filtro-estado="PENDIENTE" aria-pressed="false">Pendiente</button>
+                    <button class="chip" type="button" data-filtro-estado="EN_PROCESO" aria-pressed="false">En proceso</button>
+                    <button class="chip" type="button" data-filtro-estado="COMPLETADA" aria-pressed="false">Completada</button>
+                </div>
+
+                <div class="grupo-filtros" role="group" aria-label="Filtrar por prioridad">
+                    <span class="grupo-titulo">Prioridad</span>
+                    <button class="chip" type="button" data-filtro-prioridad="" aria-pressed="true">Todas</button>
+                    <button class="chip" type="button" data-filtro-prioridad="ALTA" aria-pressed="false">Alta</button>
+                    <button class="chip" type="button" data-filtro-prioridad="MEDIA" aria-pressed="false">Media</button>
+                    <button class="chip" type="button" data-filtro-prioridad="BAJA" aria-pressed="false">Baja</button>
+                </div>
+
+                <p class="contador-tareas" id="contador-tareas" aria-live="polite">Cargando…</p>
+            </div>
+
+            <div class="cargando" id="carga-tareas" role="status">
+                <span class="cargador" aria-hidden="true"></span>
+                <span>Cargando tus tareas…</span>
+            </div>
+
+            <div class="panel-error" id="error-tareas" role="alert" hidden>
+                <div class="panel-error-texto">
+                    <p class="panel-error-titulo">No se pudieron cargar las tareas</p>
+                    <p id="texto-error-tareas"></p>
+                </div>
+                <button class="boton boton-secundario" type="button" id="reintentar-tareas">Reintentar</button>
+            </div>
+
+            <div class="rejilla-tareas" id="rejilla-tareas" hidden></div>
+
+            <div class="estado-vacio" id="estado-vacio" hidden>
+                <span class="estado-vacio-icono" aria-hidden="true">
+                    <svg class="icono" aria-hidden="true"><use href="#icono-bandeja"/></svg>
+                </span>
+                <h2 class="estado-vacio-titulo" id="titulo-vacio">Aún no tienes tareas</h2>
+                <p class="estado-vacio-texto" id="texto-vacio">Crea tu primera tarea para empezar a organizar tu trabajo.</p>
+                <div class="estado-vacio-acciones">
+                    <button class="boton boton-secundario" type="button" id="boton-quitar-filtros" hidden>Quitar filtros</button>
+                    <button class="boton" type="button" data-abrir-crear id="boton-crear-vacio">Crear una tarea</button>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- ============ AVISOS (TOASTS) ============ -->
+<div class="zona-avisos" id="zona-avisos"></div>
+
+<!-- ============ DIÁLOGO: CREAR / EDITAR ============ -->
+<dialog class="dialogo" id="dialogo-tarea" aria-labelledby="titulo-dialogo-tarea">
+    <form class="formulario" id="formulario-tarea">
+        <header class="dialogo-cabecera">
+            <h2 class="dialogo-titulo" id="titulo-dialogo-tarea">Nueva tarea</h2>
+            <button class="boton-icono" type="button" data-cerrar-dialogo aria-label="Cerrar el formulario">
+                <svg class="icono" aria-hidden="true"><use href="#icono-cerrar"/></svg>
+            </button>
+        </header>
+
+        <div class="dialogo-cuerpo">
+            <div class="campo">
+                <label for="campo-titulo">Título</label>
+                <input id="campo-titulo" name="titulo" type="text" required maxlength="120"
+                       autocomplete="off" placeholder="Por ejemplo: Entregar la práctica de DAW">
+            </div>
+
+            <div class="campo">
+                <label for="campo-descripcion">Descripción <span class="opcional">(opcional)</span></label>
+                <textarea id="campo-descripcion" name="descripcion" maxlength="2000" rows="3"
+                          placeholder="Detalles, enlaces o pasos pendientes"></textarea>
+                <p class="contador-caracteres" id="contador-descripcion">0/2000</p>
+            </div>
+
+            <div class="fila-campos">
+                <div class="campo">
+                    <label for="campo-prioridad">Prioridad</label>
+                    <select id="campo-prioridad" name="prioridad" required>
+                        <option value="" selected disabled>Selecciona una prioridad</option>
+                        <option value="ALTA">Alta</option>
+                        <option value="MEDIA">Media</option>
+                        <option value="BAJA">Baja</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="campo-estado">Estado <span class="opcional">(opcional)</span></label>
+                    <select id="campo-estado" name="estado">
+                        <option value="">Pendiente (por defecto)</option>
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="EN_PROCESO">En proceso</option>
+                        <option value="COMPLETADA">Completada</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="campo">
+                <label for="campo-fecha">Fecha límite <span class="opcional">(opcional)</span></label>
+                <input id="campo-fecha" name="fechaLimite" type="date">
+            </div>
+
+            <p class="aviso" id="aviso-formulario" role="status" hidden></p>
+        </div>
+
+        <footer class="dialogo-pie">
+            <button class="boton boton-secundario" type="button" data-cerrar-dialogo>Cancelar</button>
+            <button class="boton" type="submit" id="boton-guardar">Guardar tarea</button>
+        </footer>
+    </form>
+</dialog>
+
+<!-- ============ DIÁLOGO: CONFIRMAR BORRADO ============ -->
+<dialog class="dialogo dialogo--estrecho" id="dialogo-borrar" aria-labelledby="titulo-dialogo-borrar">
+    <header class="dialogo-cabecera">
+        <h2 class="dialogo-titulo" id="titulo-dialogo-borrar">Eliminar tarea</h2>
+        <button class="boton-icono" type="button" data-cerrar-dialogo aria-label="Cerrar la confirmación">
+            <svg class="icono" aria-hidden="true"><use href="#icono-cerrar"/></svg>
+        </button>
+    </header>
+
+    <div class="dialogo-cuerpo">
+        <p class="dialogo-texto" id="texto-borrar"></p>
+        <p class="aviso" id="aviso-borrar" role="status" hidden></p>
+    </div>
+
+    <footer class="dialogo-pie">
+        <button class="boton boton-secundario" type="button" data-cerrar-dialogo>Cancelar</button>
+        <button class="boton boton-peligro" type="button" id="boton-confirmar-borrar">Eliminar</button>
+    </footer>
+</dialog>
+
+<!-- ============ PLANTILLAS ============ -->
+<template id="plantilla-tarea">
+    <article class="tarjeta-tarea" tabindex="-1">
+        <header class="tarea-cabecera">
+            <h2 class="tarea-titulo"></h2>
+            <div class="tarea-acciones">
+                <button class="boton-icono" type="button" data-accion="editar">
+                    <svg class="icono" aria-hidden="true"><use href="#icono-editar"/></svg>
+                </button>
+                <button class="boton-icono boton-icono--peligro" type="button" data-accion="borrar">
+                    <svg class="icono" aria-hidden="true"><use href="#icono-borrar"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <p class="tarea-descripcion"></p>
+
+        <footer class="tarea-meta">
+            <span class="pastilla pastilla-prioridad"></span>
+            <span class="pastilla pastilla--estado pastilla-estado"></span>
+            <span class="tarea-fecha">
+                <svg class="icono icono--pequeno" aria-hidden="true"><use href="#icono-calendario"/></svg>
+                <time></time>
+            </span>
+        </footer>
+    </article>
+</template>
+
+<template id="plantilla-proxima">
+    <li class="fila-compacta">
+        <div class="fila-compacta-texto">
+            <p class="fila-compacta-titulo"></p>
+            <p class="fila-compacta-meta"></p>
+        </div>
+        <p class="fila-compacta-fecha">
+            <svg class="icono icono--pequeno" aria-hidden="true"><use href="#icono-calendario"/></svg>
+            <span class="fila-compacta-fecha-texto"></span>
+        </p>
+        <span class="pastilla pastilla-prioridad"></span>
+    </li>
+</template>
+
+</body>
+</html>

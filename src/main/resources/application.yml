@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: taskflow
+
+  datasource:
+    # Los datos de conexion NO se escriben en el codigo: se leen de variables de entorno.
+    # TASKFLOW_DB_PASSWORD es obligatoria; si falta, la aplicacion no arranca.
+    # Esta URL es SOLO para uso local (MySQL en el mismo equipo, sin TLS).
+    # Si algun dia se publica, define TASKFLOW_DB_URL con sslMode=VERIFY_IDENTITY.
+    url: "${TASKFLOW_DB_URL:jdbc:mysql://127.0.0.1:3306/taskflow?sslMode=DISABLED&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=UTC}"
+    username: "${TASKFLOW_DB_USER:taskflow_app}"
+    password: "${TASKFLOW_DB_PASSWORD}"
+    hikari:
+      maximum-pool-size: 5
+      pool-name: taskflow-pool
+      # Si MySQL no responde, /api/health debe fallar en segundos, no en 30.
+      connection-timeout: 3000
+      validation-timeout: 2000
+
+  jpa:
+    # Flyway es el unico que crea o modifica tablas. Hibernate solo comprueba
+    # que las entidades coinciden con el esquema real.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  # Solo loopback: TaskFlow es una aplicacion privada y no debe ser accesible
+  # desde la red local. http://localhost:8080 sigue funcionando igual.
+  address: 127.0.0.1
+  port: 8080
+  error:
+    # No filtrar detalles internos al navegador.
+    include-message: never
+    include-stacktrace: never
+
+logging:
+  level:
+    com.taskflow: INFO
+    org.flywaydb: INFO
