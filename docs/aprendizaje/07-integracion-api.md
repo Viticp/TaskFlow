@@ -156,8 +156,8 @@ Las clases de prioridad y estado se eligen desde mapas controlados
 ## 7. Fechas sin errores de zona horaria
 
 `fechaLimite` llega como `"2026-11-20"` (un día, no una hora). Si se hace
-`new Date("2026-11-20")`, JavaScript lo interpreta como UTC y en España puede
-mostrar el día anterior. Por eso se parsea a mano:
+`new Date("2026-11-20")`, JavaScript lo interpreta como UTC y en husos horarios
+al oeste de UTC puede mostrar el día anterior. Por eso se parsea a mano:
 
 ```js
 const [anio, mes, dia] = iso.split('-').map(Number);

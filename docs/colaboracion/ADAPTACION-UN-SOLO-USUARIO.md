@@ -10,7 +10,7 @@ el CRUD de tareas, que sigue pendiente de aprobación.
 
 ## 1. Decisión
 
-TaskFlow deja de ser una aplicación con registro y login. Pasa a ser una
+VPlan deja de ser una aplicación con registro y login. Pasa a ser una
 aplicación **personal, de un solo usuario y de uso local**.
 
 Consecuencias:
@@ -145,7 +145,7 @@ ningún archivo del proyecto` (código 0).
 
 ## 5. Seguridad y alcance
 
-- TaskFlow se ejecuta en `localhost:8080`, en el equipo de la persona.
+- VPlan se ejecuta en `localhost:8080`, en el equipo de la persona.
 - **No hay autenticación**: cualquiera con acceso al puerto podría leer y
   modificar las tareas. Por eso no debe publicarse en internet tal cual.
 - Para desplegarla haría falta: autenticación, HTTPS y una revisión de seguridad.

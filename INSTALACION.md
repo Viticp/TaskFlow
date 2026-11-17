@@ -1,6 +1,6 @@
-# Instalación y traslado de TaskFlow
+# Instalación y traslado de VPlan
 
-TaskFlow es una aplicación **local, privada y de un solo usuario**. Se ejecuta en
+VPlan es una aplicación **local, privada y de un solo usuario**. Se ejecuta en
 tu ordenador y se abre en `http://localhost:8080`. No se publica en internet, no
 necesita hosting y no tiene login ni registro.
 
@@ -17,8 +17,8 @@ otro ordenador y cómo hacer copias de seguridad de las tareas.
 | Componente | Versión | Notas |
 |---|---|---|
 | Sistema operativo | Windows 10 u 11 | La guía principal es para Windows |
-| Java | **JDK 21 o superior** | Probado con Temurin 25 |
-| Base de datos | **MySQL 8.0 o superior** | Probado con MySQL 8.0.45 |
+| Java | **JDK 21 o superior** | Probado con Temurin 21.0.13 |
+| Base de datos | **MySQL 8.0 o superior** | Probado con MySQL 8.0.43 |
 | Terminal | PowerShell 5.1 o superior | Incluida en Windows |
 | Puerto | 8080 libre | Solo se abre en `127.0.0.1` |
 | Internet | Solo la primera vez | Maven descarga sus dependencias |
@@ -43,7 +43,7 @@ javac -version
 ```
 
 Ambos comandos deben mostrar una versión **21 o superior**. Si en el equipo hay
-varias instalaciones de Java, lo importante es que TaskFlow encuentre una válida:
+varias instalaciones de Java, lo importante es que VPlan encuentre una válida:
 el script de entorno busca en este orden:
 
 1. El parámetro `-JavaHome`.
@@ -99,12 +99,12 @@ mysql --version
 mysqldump --version
 ```
 
-Los scripts de TaskFlow también buscan MySQL automáticamente en
+Los scripts de VPlan también buscan MySQL automáticamente en
 `C:\Program Files\MySQL\MySQL Server *\bin`, aunque no esté en el `PATH`.
 
 ### Privacidad: aceptar solo conexiones locales
 
-TaskFlow es una aplicación privada, así que MySQL debe escuchar **solo en
+VPlan es una aplicación privada, así que MySQL debe escuchar **solo en
 localhost**:
 
 1. Localiza `my.ini`. En una instalación habitual está en:
@@ -141,12 +141,10 @@ conexiones de la red local.
 > firewall. El usuario `taskflow_app` solo existe para `localhost`, así que un
 > equipo remoto no puede autenticarse con él, pero es mejor cerrar el puerto.
 
-> **Estado detectado en este equipo (17/11/2026):** MySQL escuchaba en `::`
-> (todas las interfaces) y `my.ini` no tenía `bind-address`. El firewall de
-> Windows mantiene las reglas de entrada de `mysqld` en **Block**, así que la red
-> no podía conectar, pero la configuración no cumple esta recomendación. La Fase 9
-> **no modificó** `my.ini` ni el firewall: corregirlo requiere una PowerShell como
-> administrador. El procedimiento es el de los pasos 1–4 de esta sección.
+> **Estado verificado en este equipo (17/11/2026):** MySQL está configurado con
+> `bind-address=127.0.0.1` en `my.ini` y escucha únicamente en loopback. El
+> servicio `MySQL80` arranca automáticamente. La aplicación se conecta a
+> `127.0.0.1:3306`.
 
 ---
 
@@ -253,7 +251,7 @@ El script crea un log por arranque en `logs\taskflow-AAAA-MM-DD_HHmmss.log`.
 La carpeta `logs/` está ignorada por Git. Si el arranque falla, muestra las
 últimas líneas del log y no deja el proceso abierto.
 
-Si TaskFlow ya está en marcha, el script no arranca una segunda copia: abre el
+Si VPlan ya está en marcha, el script no arranca una segunda copia: abre el
 navegador y termina correctamente. Si el puerto 8080 lo ocupa **otro** programa,
 se niega a continuar y muestra su PID.
 
@@ -284,26 +282,49 @@ accesible desde otro equipo de la red.
 .\scripts\stop-taskflow.ps1
 ```
 
-El script busca el proceso que escucha en 8080, comprueba que es TaskFlow, lo
+El script busca el proceso que escucha en 8080, comprueba que es VPlan, lo
 detiene, para también el lanzador de Maven, comprueba que el puerto queda libre y
 borra `logs\taskflow.pid`. Si no hay nada en marcha, termina sin error.
 
 Nunca detiene un proceso ajeno: si el puerto lo ocupa otro programa, se niega.
 Solo si estás completamente seguro puedes usar `-Force`.
 
-### Accesos directos de escritorio
+### Acceso directo de escritorio
 
-Para arrancar y parar con doble clic:
+Para abrir VPlan como una aplicación de escritorio:
 
 ```powershell
 .\scripts\create-shortcuts.ps1
 ```
 
-Crea en el escritorio **TaskFlow** y **Detener TaskFlow**. Los accesos usan una
-ventana normal de PowerShell; si el arranque falla, la ventana se queda abierta
-para que puedas leer el error. No necesitan permisos de administrador.
+Crea un único acceso directo **VPlan** en el escritorio. Al hacer doble clic:
 
-Si ya existen y quieres reemplazarlos:
+1. Arranca Spring Boot si VPlan no está en marcha.
+2. Abre VPlan en una ventana independiente de Chrome en modo aplicación, sin
+   pestañas ni barra de direcciones.
+3. Cuando cierras esa ventana, detiene el servidor que arrancó el propio acceso
+   directo.
+
+Si VPlan ya estaba en marcha (por ejemplo, lanzado con
+`start-taskflow.ps1` o desde el IDE), el acceso directo reutiliza esa instancia
+y **no** la detiene al cerrar la ventana. Tampoco cierra Chrome ni otras
+ventanas: solo afecta a la ventana de VPlan y al servidor que inició él mismo.
+
+La ventana usa un perfil de Chrome propio en `logs\vplan-chrome-profile`, por lo
+que no comparte cookies ni preferencias (como el tema) con tu Chrome habitual.
+Ese perfil dedicado es lo que permite detectar el cierre de la ventana de forma
+fiable sin tocar otras ventanas de Chrome.
+
+El acceso directo no necesita permisos de administrador. Si el arranque falla,
+muestra un aviso con el error y el detalle queda en `logs\vplan-app.log`.
+
+Para detener VPlan manualmente sigue usando:
+
+```powershell
+.\scripts\stop-taskflow.ps1
+```
+
+Si el acceso directo ya existe y quieres reemplazarlo:
 
 ```powershell
 .\scripts\create-shortcuts.ps1 -Force
@@ -357,7 +378,7 @@ La carpeta `backups/` está ignorada por Git. Guarda una copia en un lugar priva
 
 ### Restaurar una copia
 
-Con TaskFlow **parado**:
+Con VPlan **parado**:
 
 ```powershell
 .\scripts\stop-taskflow.ps1
@@ -436,7 +457,7 @@ cmd /c "mysql --host=127.0.0.1 --port=3306 --user=taskflow_app --default-charact
 
 ---
 
-## 8. Trasladar TaskFlow a otro ordenador
+## 8. Trasladar VPlan a otro ordenador
 
 ### Qué copiar
 
@@ -463,7 +484,7 @@ siendo privado y sin commits, copia la carpeta fuente. En ambos casos excluye
 - [ ] `.\scripts\start-taskflow.ps1` arranca sin errores y abre el navegador.
 - [ ] `/api/health` responde `UP` y las tareas aparecen en la interfaz.
 - [ ] Flyway sigue en la versión 2.
-- [ ] `.\scripts\create-shortcuts.ps1` crea los accesos directos (opcional).
+- [ ] `.\scripts\create-shortcuts.ps1` crea el acceso directo VPlan (opcional).
 - [ ] La copia `.sql` se borra del equipo viejo si ya no se necesita.
 
 ### Restauración en el equipo nuevo, paso a paso
@@ -502,13 +523,14 @@ si el script agota el tiempo, repite con `-TimeoutSeconds 180`.
 | `Communications link failure` | MySQL parado | `Get-Service MySQL80` y `Start-Service MySQL80` |
 | `Unknown database 'taskflow'` | No se ejecutó el script de creación | Ejecuta `00_create_database_and_user.sql` |
 | `Port 8080 was already in use` | Otra aplicación usa el puerto | `Get-NetTCPConnection -LocalPort 8080` y detén ese proceso |
-| El arranque dice que TaskFlow ya está en marcha | Ya hay una instancia escuchando en 8080 | Es normal: abre el navegador. Si `/api/health` no responde `UP`, revisa el log y usa `stop-taskflow.ps1` |
+| El arranque dice que VPlan ya está en marcha | Ya hay una instancia escuchando en 8080 | Es normal: abre el navegador. Si `/api/health` no responde `UP`, revisa el log y usa `stop-taskflow.ps1` |
 | El puerto 8080 lo ocupa otro programa | Hay un proceso ajeno | El arranque y la parada se niegan a tocarlo. Identifícalo con `Get-NetTCPConnection -LocalPort 8080` |
 | `Falta TASKFLOW_DB_PASSWORD` | No existe `.env.local` o no se cargó | Ejecuta `.\scripts\set-db-password.ps1` y vuelve a arrancar |
 | No sé dónde está el error de arranque | La salida va al log | Abre `logs\taskflow-AAAA-MM-DD_HHmmss.log`; el script muestra las últimas líneas si falla |
 | `Access denied ... taskflow_restore_test` | `taskflow_app` no tiene permisos sobre la base de prueba | Pide a un administrador que cree la base y conceda permisos (sección 7) |
-| Los accesos directos no aparecen | No se crearon o el escritorio es otro | Ejecuta `.\scripts\create-shortcuts.ps1` y revisa la ruta que imprime |
-| La parada no detiene un proceso que no es TaskFlow | Es una protección deliberada | No uses `-Force` salvo que estés seguro de que puedes cerrar ese proceso |
+| El acceso directo no aparece | No se creó o el escritorio es otro | Ejecuta `.\scripts\create-shortcuts.ps1` y revisa la ruta que imprime |
+| Al cerrar la ventana de VPlan no se detiene el servidor | VPlan ya estaba en marcha por otro método | Es intencionado: el acceso directo solo detiene lo que arrancó él. Para pararlo usa `stop-taskflow.ps1` |
+| La parada no detiene un proceso que no es VPlan | Es una protección deliberada | No uses `-Force` salvo que estés seguro de que puedes cerrar ese proceso |
 | `mysqldump: Access denied ... PROCESS privilege` | `taskflow_app` no tiene privilegios globales | Usa `backup-db.ps1` o añade `--no-tablespaces` |
 | Flyway: `applied migration not resolved locally` | Se editó una migración ya aplicada | No edites `V1` ni `V2`; crea `V3__...` |
 | Flyway: `Schema-validation: missing table` | El dump no incluía `flyway_schema_history` | Restaura una copia completa |
@@ -520,7 +542,7 @@ si el script agota el tiempo, repite con `-TimeoutSeconds 180`.
 
 ## 10. Privacidad y alcance
 
-TaskFlow es deliberadamente **local y sin autenticación**:
+VPlan es deliberadamente **local y sin autenticación**:
 
 - Spring Boot escucha solo en `127.0.0.1:8080`.
 - MySQL debe escuchar solo en `127.0.0.1:3306`.
@@ -532,43 +554,21 @@ TaskFlow es deliberadamente **local y sin autenticación**:
 - No expongas el puerto 8080 a internet. Para publicar la aplicación harían falta
   autenticación, HTTPS y una revisión de seguridad.
 
-### Incidencia conocida en este equipo (17/11/2026)
+### Estado verificado en este equipo (17/11/2026)
 
-La aplicación sí escucha solo en `127.0.0.1:8080`, pero **MySQL escuchaba en `::`**
-(todas las interfaces) y `my.ini` no tenía `bind-address`. Las reglas de entrada
-del firewall para `mysqld` están en **Block**, así que la red local no podía
-conectar, pero la configuración del servicio no cumple la recomendación de la
-sección 3.
+La aplicación escucha solo en `127.0.0.1:8080`. MySQL está configurado con
+`bind-address=127.0.0.1` en `my.ini`, escucha únicamente en loopback y su
+servicio `MySQL80` arranca automáticamente. La configuración cumple la
+recomendación de la sección 3.
 
-La Fase 9 **no modificó** `my.ini` ni el firewall, porque requiere permisos de
-administrador y quedaba fuera del alcance aprobado. Para corregirlo:
-
-1. Edita `C:\ProgramData\MySQL\MySQL Server 8.0\my.ini` y añade en `[mysqld]`:
-
-```ini
-bind-address=127.0.0.1
-```
-
-2. Reinicia el servicio desde una PowerShell **como administrador**:
-
-```powershell
-Restart-Service MySQL80
-```
-
-3. Comprueba que solo queda loopback:
-
-```powershell
-Get-NetTCPConnection -LocalPort 3306 -State Listen | Select-Object LocalAddress
-```
-
-Debe aparecer `127.0.0.1` (o `::1`), no `::` ni `0.0.0.0`. La aplicación seguirá
-funcionando porque se conecta a `127.0.0.1:3306`.
+Si en otro equipo MySQL escucha en `::` o `0.0.0.0`, aplica el procedimiento de
+[Privacidad: aceptar solo conexiones locales](#privacidad-aceptar-solo-conexiones-locales).
 
 ---
 
 ## 11. Para el currículum
 
-TaskFlow demuestra:
+VPlan demuestra:
 
 - Backend Java 21 con Spring Boot 3.5, Spring MVC, Spring Data JPA y Bean
   Validation.
@@ -579,8 +579,8 @@ TaskFlow demuestra:
 - Configuración por variables de entorno, sin secretos en el repositorio.
 - Detección portable del JDK, scripts de arranque/parada, copia y restauración, y
   documentación de instalación reproducible.
-- Accesos directos de escritorio y comprobaciones reales de persistencia,
-  copia y restauración.
+- Acceso directo de escritorio en modo aplicación y comprobaciones reales de
+  persistencia, copia y restauración.
 - Aplicación *local-first*: sin hosting, sin login y con los datos en tu equipo.
 
 ---

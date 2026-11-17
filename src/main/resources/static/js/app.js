@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TaskFlow · app.js
+   VPlan · app.js
    --------------------------------------------------------------------------
    Fase 6: interfaz conectada a la API real.
    - Lee las tareas de /api/tareas y las pinta con plantillas y textContent.
@@ -219,7 +219,7 @@ function mostrarVista(nombre, moverFoco) {
         }
     });
 
-    document.title = `${vistas[nombre].titulo} · TaskFlow`;
+    document.title = `${vistas[nombre].titulo} · VPlan`;
     window.scrollTo(0, 0);
 
     if (moverFoco) {

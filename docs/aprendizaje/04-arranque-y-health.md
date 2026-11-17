@@ -73,7 +73,7 @@ la comprobación y, de paso, evitar una dependencia extra que ocultaría qué oc
 
 ## 4. Acceso y alcance
 
-TaskFlow es una aplicación personal que se ejecuta en tu equipo. **No hay
+VPlan es una aplicación personal que se ejecuta en tu equipo. **No hay
 autenticación ni autorización**: todas las rutas son públicas.
 
 | Ruta | Acceso |

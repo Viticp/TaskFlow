@@ -8,7 +8,7 @@
 
 ## 1. Objetivo
 
-Construir la interfaz de TaskFlow con HTML, CSS y JavaScript vanilla: menú
+Construir la interfaz de VPlan con HTML, CSS y JavaScript vanilla: menú
 lateral, dashboard con saludo personalizado, listado de tareas, filtros,
 formularios y diseño responsive. Sin conexión a la API todavía (Fase 6).
 
@@ -102,7 +102,7 @@ navegador impone un mínimo de ventana y recorta la captura.
 |---|---|
 | Saludo | `¡Buenos días, Victor!` (según la hora del equipo) |
 | Fecha | `Martes, 17 de noviembre de 2026` |
-| Título del documento al cambiar de vista | `Mis tareas · TaskFlow` / `Dashboard · TaskFlow` |
+| Título del documento al cambiar de vista | `Mis tareas · VPlan` / `Dashboard · VPlan` |
 | `aria-current="page"` | Solo en el enlace de la vista activa |
 | Filtro `EN_PROCESO` | 1 tarjeta visible, contador `1 de 4 tareas` |
 | Filtro `EN_PROCESO` + `ALTA` | 0 tarjetas y estado vacío visible |

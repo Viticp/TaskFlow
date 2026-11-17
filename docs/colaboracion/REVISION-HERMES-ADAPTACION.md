@@ -1,4 +1,4 @@
-# Revisión independiente — Adaptación de TaskFlow a aplicación personal de un solo usuario
+# Revisión independiente — Adaptación de VPlan a aplicación personal de un solo usuario
 
 **Fecha:** 2026-11-17
 **Revisor:** Hermes (revisión en modo lectura, sin ejecución de la app ni tests)

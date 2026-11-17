@@ -2,7 +2,7 @@
 
 ## 1. Vista general
 
-TaskFlow es una aplicación **monolítica**: un único proceso Spring Boot sirve tanto
+VPlan es una aplicación **monolítica**: un único proceso Spring Boot sirve tanto
 la API JSON como los archivos HTML, CSS y JavaScript.
 
 ```text
@@ -57,7 +57,7 @@ Petición: `PUT /api/tareas/12` con `{"titulo":"Entrega","prioridad":"ALTA","est
 
 ## 4. Aplicación de un solo usuario (sin autenticación)
 
-TaskFlow se usa **en local, por una sola persona**. No hay registro, login,
+VPlan se usa **en local, por una sola persona**. No hay registro, login,
 sesiones ni cookies de identidad. Consecuencias de diseño:
 
 - Todas las rutas son públicas: no existe `SecurityConfig` ni filtros de

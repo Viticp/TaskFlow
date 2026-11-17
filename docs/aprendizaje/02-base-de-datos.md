@@ -2,7 +2,7 @@
 
 ## 1. Qué guardamos
 
-Una sola tabla, `tareas`: TaskFlow es de un único usuario, así que no hay
+Una sola tabla, `tareas`: VPlan es de un único usuario, así que no hay
 dueño de la tarea ni relación con ninguna tabla de usuarios.
 
 ### `tareas`
@@ -57,7 +57,7 @@ Reglas:
 - Los nombres siguen `V<número>__descripcion.sql`.
 - En producción, un cambio destructivo se planifica; no se improvisa.
 
-**Caso real de TaskFlow:** al pasar a un solo usuario, `V1` no se tocó. Se creó
+**Caso real de VPlan:** al pasar a un solo usuario, `V1` no se tocó. Se creó
 `V2__single_user.sql`, que elimina la clave foránea, los índices que empezaban por
 `usuario_id`, la columna `usuario_id` y la tabla `usuarios`. Se pudo hacer sin
 perder datos porque ambas tablas estaban vacías. Si hubiera habido tareas, el
@@ -154,7 +154,7 @@ sistemas. El dump SQL sí lo es.
 
 ## 7. MySQL solo en local
 
-TaskFlow es una aplicación privada. Además de `server.address: 127.0.0.1` en
+VPlan es una aplicación privada. Además de `server.address: 127.0.0.1` en
 Spring Boot, MySQL debe escuchar solo en loopback:
 
 ```ini

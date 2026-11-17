@@ -15,7 +15,7 @@
     <groupId>com.taskflow</groupId>
     <artifactId>taskflow</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <name>TaskFlow</name>
+    <name>VPlan</name>
     <description>Gestor de tareas personales</description>
 
     <properties>

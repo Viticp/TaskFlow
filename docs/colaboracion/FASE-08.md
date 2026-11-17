@@ -8,7 +8,7 @@
 
 ## 1. Objetivo
 
-Revisar la calidad y la robustez de TaskFlow antes de la documentación final y
+Revisar la calidad y la robustez de VPlan antes de la documentación final y
 GitHub, sin cambiar el alcance aprobado:
 
 - Auditar estructura, backend, frontend, configuración, migraciones, scripts y
@@ -217,6 +217,11 @@ En `docs/capturas/`:
 Se revisaron una a una. Todas se tomaron con datos reales y la base quedó vacía.
 
 ## 10. Cómo repetir las pruebas
+
+> **Nota de publicación:** solo el paso 1 está incluido en el repositorio. Los
+> verificadores de los pasos 3, 4, 5 y 6 vivían en `target/` (ignorado por Git) y
+> no se publican; se conservan aquí como registro de cómo se verificó la fase. La
+> prueba automatizada que puedes repetir es `.\mvnw.cmd test`.
 
 ```powershell
 # 1. Tests del backend (H2, no necesitan MySQL)

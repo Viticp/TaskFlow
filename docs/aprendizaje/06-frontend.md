@@ -1,6 +1,6 @@
 # Frontend
 
-Esta guía explica cómo está construida la interfaz de TaskFlow. El diseño y la
+Esta guía explica cómo está construida la interfaz de VPlan. El diseño y la
 estructura nacieron en la Fase 5; desde la Fase 6 la interfaz **lee y escribe
 datos reales** en MySQL a través de `/api/tareas`. La Fase 7 amplía el dashboard
 con analíticas calculadas en el navegador y añade el **tema claro/oscuro**.

@@ -1,4 +1,4 @@
-# TaskFlow - Copia de seguridad completa de la base de datos.
+# VPlan - Copia de seguridad completa de la base de datos.
 #
 # Uso:
 #     .\scripts\backup-db.ps1

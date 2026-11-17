@@ -1,7 +1,7 @@
 # Adaptación de portabilidad — Informe de implementación
 
 **Fecha:** 2026-11-17  
-**Alcance:** traslado de TaskFlow del ordenador de clase a un Windows 10/11
+**Alcance:** traslado de VPlan del ordenador de clase a un Windows 10/11
 personal. Sin cambios de esquema, migraciones, dependencias, autenticación ni
 diseño del frontend.  
 **Estado:** implementado y verificado. La Fase 7 se desarrolló después.
@@ -144,8 +144,8 @@ archivo UTF-8 sin BOM.
 | `GET /api/tareas` | 1 tarea |
 | `DELETE /api/tareas/19` | `204`; después 0 tareas |
 | Escucha del puerto 8080 | Solo `127.0.0.1` |
-| Acceso desde `172.29.112.1:8080` | No alcanzable |
-| Acceso desde `10.196.79.99:8080` | No alcanzable |
+| Acceso desde otro equipo de la red local (1) | No alcanzable |
+| Acceso desde otro equipo de la red local (2) | No alcanzable |
 
 ### 4.5 Backup
 
@@ -178,11 +178,11 @@ con un directorio de datos en `%TEMP%`. **No se tocó `taskflow`.**
 
 ### 4.7 Protecciones de restauración
 
-Con TaskFlow abierto en el puerto 8080, `restore-db.ps1` sin `-Force` se negó a
+Con VPlan abierto en el puerto 8080, `restore-db.ps1` sin `-Force` se negó a
 continuar:
 
 ```text
-Hay algo escuchando en el puerto 8080. Deten TaskFlow (Ctrl+C) antes de restaurar.
+Hay algo escuchando en el puerto 8080. Deten VPlan (Ctrl+C) antes de restaurar.
 ```
 
 La base siguió con 1 tarea: no se modificó nada.
@@ -238,7 +238,7 @@ Código de salida: `0`.
 
 ## 7. Conclusión
 
-TaskFlow ya no depende del JDK, las rutas ni los archivos locales del ordenador de
+VPlan ya no depende del JDK, las rutas ni los archivos locales del ordenador de
 clase. La aplicación escucha solo en loopback, las credenciales siguen fuera del
 repositorio y el ciclo copia/restauración está probado con datos reales en una
 base independiente. El esquema, las migraciones, los tests y el frontend no se han

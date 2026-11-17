@@ -1,4 +1,4 @@
-# TaskFlow - Arranque de uso diario.
+# VPlan - Arranque de uso diario.
 #
 # Uso:
 #     .\scripts\start-taskflow.ps1
@@ -9,7 +9,7 @@
 # Que hace:
 #   1. Carga el entorno de la sesion con set-dev-env.ps1 (JDK 21+ y .env.local).
 #   2. Comprueba que MySQL responde en 127.0.0.1:3306.
-#   3. Comprueba que el puerto 8080 esta libre o que ya lo usa TaskFlow.
+#   3. Comprueba que el puerto 8080 esta libre o que ya lo usa VPlan.
 #   4. Arranca mvnw spring-boot:run en segundo plano, con la salida en logs/.
 #   5. Espera a que /api/health responda UP y abre el navegador.
 #   6. Guarda los PID en logs/taskflow.pid para que stop-taskflow.ps1 los use.
@@ -24,7 +24,8 @@ param(
     [switch]$NoBrowser,
     [int]$TimeoutSeconds = 90,
     [switch]$Foreground,
-    [switch]$NoPause
+    [switch]$NoPause,
+    [int]$OwnerPid = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -126,8 +127,26 @@ function Show-TaskFlowLogTail {
 function Open-TaskFlowBrowser {
     if ($NoBrowser) { return }
 
+    # Preferir Chrome, que es el navegador indicado para VPlan. Si no esta
+    # instalado, usar el navegador predeterminado del sistema.
+    $chromeCandidates = @()
+    if ($env:ProgramFiles) {
+        $chromeCandidates += Join-Path $env:ProgramFiles "Google\Chrome\Application\chrome.exe"
+    }
+    if (${env:ProgramFiles(x86)}) {
+        $chromeCandidates += Join-Path ${env:ProgramFiles(x86)} "Google\Chrome\Application\chrome.exe"
+    }
+    if ($env:LOCALAPPDATA) {
+        $chromeCandidates += Join-Path $env:LOCALAPPDATA "Google\Chrome\Application\chrome.exe"
+    }
+    $chrome = $chromeCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+
     try {
-        Start-Process "http://localhost:8080" | Out-Null
+        if ($chrome) {
+            Start-Process -FilePath $chrome -ArgumentList "http://localhost:8080" | Out-Null
+        } else {
+            Start-Process "http://localhost:8080" | Out-Null
+        }
     } catch {
         Write-Host "  No se pudo abrir el navegador automaticamente." -ForegroundColor Yellow
         Write-Host "  Abre http://localhost:8080 a mano."
@@ -143,7 +162,7 @@ try {
     }
 
     Write-Host ""
-    Write-Host "TaskFlow - arranque" -ForegroundColor Cyan
+    Write-Host "VPlan - arranque" -ForegroundColor Cyan
     Write-Host "  Proyecto: $projectRoot"
 
     # set-dev-env.ps1 solo cambia esta sesion. El proceso hijo hereda JAVA_HOME,
@@ -168,7 +187,7 @@ try {
     }
     $javaMajor = [int]$Matches[1]
     if ($javaMajor -lt 21) {
-        throw "Java $javaMajor es demasiado antiguo. TaskFlow necesita JDK 21 o superior."
+        throw "Java $javaMajor es demasiado antiguo. VPlan necesita JDK 21 o superior."
     }
     Write-Host "  Java    : $javacVersion"
 
@@ -181,7 +200,7 @@ try {
     if ($listener) {
         $existing = Get-TaskFlowProcessInfo -ProcessId ([int]$listener.OwningProcess)
         if (Test-TaskFlowProcess -Info $existing) {
-            Write-Host "  TaskFlow ya esta en marcha (PID $($existing.Id))." -ForegroundColor Yellow
+            Write-Host "  VPlan ya esta en marcha (PID $($existing.Id))." -ForegroundColor Yellow
 
             $deadlineExisting = (Get-Date).AddSeconds(15)
             $healthExisting = $null
@@ -201,11 +220,11 @@ try {
                 exit 0
             }
 
-            throw "TaskFlow esta en marcha, pero /api/health no responde UP. Revisa el proceso o usa stop-taskflow.ps1."
+            throw "VPlan esta en marcha, pero /api/health no responde UP. Revisa el proceso o usa stop-taskflow.ps1."
         }
 
         $name = if ($existing) { $existing.Name } else { "desconocido" }
-        throw "El puerto 8080 esta ocupado por el proceso PID $($listener.OwningProcess) ($name). TaskFlow no lo tocara."
+        throw "El puerto 8080 esta ocupado por el proceso PID $($listener.OwningProcess) ($name). VPlan no lo tocara."
     }
 
     if ($Foreground) {
@@ -252,7 +271,7 @@ call "$mvnwPath" spring-boot:run > "$logPath" 2>&1
 
     if (-not $health -or $health.status -ne "UP" -or $health.database -ne "UP") {
         Show-TaskFlowLogTail
-        throw "TaskFlow no ha respondido UP en $TimeoutSeconds segundos. Revisa el log: $logPath"
+        throw "VPlan no ha respondido UP en $TimeoutSeconds segundos. Revisa el log: $logPath"
     }
 
     $listener = Get-TaskFlowListener
@@ -265,15 +284,18 @@ call "$mvnwPath" spring-boot:run > "$logPath" 2>&1
         "AppPid=$appPid"
         "Started=$((Get-Date).ToString('s'))"
         "Log=$logPath"
-    ) -join "`r`n"
+    )
+    if ($OwnerPid -gt 0) {
+        $pidLines += "OwnerPid=$OwnerPid"
+    }
     [System.IO.File]::WriteAllText(
         $pidFile,
-        $pidLines + "`r`n",
+        (($pidLines -join "`r`n") + "`r`n"),
         (New-Object System.Text.UTF8Encoding($false))
     )
 
     Write-Host ""
-    Write-Host "TaskFlow iniciado" -ForegroundColor Green
+    Write-Host "VPlan iniciado" -ForegroundColor Green
     Write-Host "  URL    : http://localhost:8080"
     Write-Host "  PID    : $appPid"
     Write-Host "  Log    : $logPath"

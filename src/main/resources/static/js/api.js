@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TaskFlow · api.js
+   VPlan · api.js
    --------------------------------------------------------------------------
    Fase 6: única capa que habla con la API REST.
    - Construye las peticiones a /api/tareas.
@@ -44,11 +44,11 @@ async function peticion(ruta, opciones = {}) {
     } catch (fallo) {
         if (fallo.name === 'TimeoutError' || fallo.name === 'AbortError') {
             throw new ErrorApi(
-                'El servidor ha tardado demasiado en responder. Comprueba que TaskFlow sigue abierto.',
+                'El servidor ha tardado demasiado en responder. Comprueba que VPlan sigue abierto.',
                 { esTiempo: true });
         }
         throw new ErrorApi(
-            'No se pudo conectar con el servidor. Comprueba que TaskFlow está en marcha.',
+            'No se pudo conectar con el servidor. Comprueba que VPlan está en marcha.',
             { esRed: true });
     }
 

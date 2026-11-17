@@ -1,4 +1,4 @@
--- TaskFlow - Creacion de la base de datos y del usuario de la aplicacion
+-- VPlan - Creacion de la base de datos y del usuario de la aplicacion
 --
 -- EJECUTAR UNA SOLA VEZ como administrador de MySQL (root).
 -- Antes de ejecutar, sustituye CAMBIA_ESTA_CONTRASENA por una contrasena

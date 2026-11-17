@@ -1,17 +1,17 @@
-# TaskFlow - Accesos directos de escritorio para uso diario.
+# VPlan - Acceso directo de escritorio en modo aplicacion.
 #
 # Uso:
 #     .\scripts\create-shortcuts.ps1
 #     .\scripts\create-shortcuts.ps1 -Force
 #
 # Crea en el escritorio:
-#   - "TaskFlow"          -> arranca TaskFlow y abre el navegador.
-#   - "Detener TaskFlow"  -> para TaskFlow y libera el puerto 8080.
+#   - "VPlan" -> arranca VPlan, abre Chrome en modo aplicacion y detiene el
+#                servidor cuando se cierra esa ventana.
 #
-# No requiere permisos de administrador y no modifica el sistema: solo crea dos
-# archivos .lnk en el escritorio del usuario.
+# Mantiene un unico acceso directo: elimina "Detener VPlan" si existe.
+# No requiere permisos de administrador y no modifica el sistema.
 #
-# Si un acceso ya existe, no se sobrescribe salvo que se use -Force.
+# Si el acceso ya existe, no se sobrescribe salvo que se use -Force.
 
 [CmdletBinding()]
 param(
@@ -32,14 +32,10 @@ if (-not (Test-Path -LiteralPath $powershell)) {
     throw "No se ha encontrado powershell.exe en '$powershell'."
 }
 
-$startScript = Join-Path $PSScriptRoot "start-taskflow.ps1"
-$stopScript = Join-Path $PSScriptRoot "stop-taskflow.ps1"
+$appScript = Join-Path $PSScriptRoot "start-vplan-app.ps1"
 
-if (-not (Test-Path -LiteralPath $startScript)) {
-    throw "No se encuentra scripts\start-taskflow.ps1."
-}
-if (-not (Test-Path -LiteralPath $stopScript)) {
-    throw "No se encuentra scripts\stop-taskflow.ps1."
+if (-not (Test-Path -LiteralPath $appScript)) {
+    throw "No se encuentra scripts\start-vplan-app.ps1."
 }
 
 function New-TaskFlowShortcut {
@@ -59,10 +55,10 @@ function New-TaskFlowShortcut {
     $shell = New-Object -ComObject WScript.Shell
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $powershell
-    $shortcut.Arguments = "-NoProfile -File `"$ScriptPath`""
+    $shortcut.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`""
     $shortcut.WorkingDirectory = $projectRoot
     $shortcut.Description = $Description
-    $shortcut.WindowStyle = 1
+    $shortcut.WindowStyle = 7
     $shortcut.Save()
 
     Write-Host "  Creado: $shortcutPath" -ForegroundColor Green
@@ -70,15 +66,18 @@ function New-TaskFlowShortcut {
 }
 
 Write-Host ""
-Write-Host "TaskFlow - accesos directos" -ForegroundColor Cyan
+Write-Host "VPlan - acceso directo" -ForegroundColor Cyan
 Write-Host "  Escritorio: $desktop"
 Write-Host ""
 
-New-TaskFlowShortcut -Name "TaskFlow" -ScriptPath $startScript `
-    -Description "Arranca TaskFlow y abre http://localhost:8080" | Out-Null
+New-TaskFlowShortcut -Name "VPlan" -ScriptPath $appScript `
+    -Description "Abre VPlan en una ventana de Chrome y detiene el servidor al cerrarla" | Out-Null
 
-New-TaskFlowShortcut -Name "Detener TaskFlow" -ScriptPath $stopScript `
-    -Description "Detiene TaskFlow y libera el puerto 8080" | Out-Null
+$stopShortcut = Join-Path $desktop "Detener VPlan.lnk"
+if (Test-Path -LiteralPath $stopShortcut) {
+    Remove-Item -LiteralPath $stopShortcut -Force
+    Write-Host "  Eliminado: $stopShortcut" -ForegroundColor Yellow
+}
 
 Write-Host ""
-Write-Host "Accesos directos preparados. Doble clic en 'TaskFlow' para arrancar." -ForegroundColor Green
+Write-Host "Acceso directo preparado. Doble clic en 'VPlan' para abrir la aplicacion." -ForegroundColor Green

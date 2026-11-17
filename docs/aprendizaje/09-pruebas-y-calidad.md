@@ -1,11 +1,11 @@
 # Pruebas y calidad
 
-Esta guía explica cómo se verificó TaskFlow en la Fase 8 y cómo puedes repetir las
+Esta guía explica cómo se verificó VPlan en la Fase 8 y cómo puedes repetir las
 pruebas. La idea central es sencilla: **no basta con que la aplicación arranque**.
 Hay que demostrar que guarda, que valida, que falla con elegancia y que se puede
 usar con teclado, en móvil y en tema oscuro.
 
-## 1. La pirámide de pruebas de TaskFlow
+## 1. La pirámide de pruebas de VPlan
 
 | Nivel | Qué comprueba | Herramienta | Cantidad |
 |---|---|---|---:|
@@ -13,6 +13,12 @@ usar con teclado, en móvil y en tema oscuro.
 | API real | CRUD, validación, HTTP, filtros y límites | Node + `fetch` + MySQL | 53 |
 | Interfaz real | Diálogos, teclado, filtros, red, responsive | Chrome + CDP | 98 |
 | Regresión | Dashboard, analíticas y tema de la Fase 7 | Chrome + CDP | 134 |
+
+Los **34 tests de backend** son la única suite automatizada incluida en el
+repositorio. Las suites de API, interfaz y regresión se ejecutaron con scripts
+guardados en `target/`, que Git ignora, y **no se publican**: sus cifras quedan
+como evidencia de la verificación original y no se pueden repetir solo con el
+repositorio.
 
 Los tests de backend usan **H2 en modo MySQL**, así que no necesitan la base real.
 Las suites de API e interfaz sí usan **MySQL 8** y la aplicación arrancada.
@@ -23,6 +29,9 @@ Las suites de API e interfaz sí usan **MySQL 8** y la aplicación arrancada.
 . .\scripts\set-dev-env.ps1
 .\mvnw.cmd test
 ```
+
+Esta es la suite que puedes ejecutar tal cual con el repositorio: usa H2 y no
+necesita MySQL ni ningún script adicional.
 
 Qué demuestran, por capas:
 
@@ -37,6 +46,10 @@ Un test unitario no sustituye a una prueba real: H2 puede aceptar algo que MySQL
 rechace. Por eso la Fase 8 añade pruebas contra el motor verdadero.
 
 ## 3. Pruebas de API contra MySQL
+
+El verificador de esta sección **no forma parte del repositorio**: se ejecutó desde
+`target/` y se conserva aquí como documentación del método. Para repetir pruebas
+automatizadas con lo publicado, usa `.\mvnw.cmd test`.
 
 ```powershell
 node target\verify-phase8-api.mjs
@@ -83,7 +96,9 @@ Antes de tocar código, comprueba que la prueba mide lo que crees que mide.
 ## 4. Comprobación directa en MySQL
 
 La API podría mentir si el frontend o la caché muestran datos viejos. Por eso se
-consulta la base con JDBC, sin pasar por Spring:
+consulta la base con JDBC, sin pasar por Spring. El programa auxiliar de esta fase
+(`VerifyFase8.java`) se guardó en `target/` y no se publica; el fragmento siguiente
+contiene la consulta completa:
 
 ```java
 try (Connection conexion = DriverManager.getConnection(url, usuario, contrasena);
@@ -107,6 +122,9 @@ El recuento inicial y final debe ser el mismo. En esta fase: **0 → 0**.
 
 No se añadió Playwright ni Selenium. Chrome ya ofrece un protocolo para abrir una
 pestaña, navegar, evaluar JavaScript, simular teclas y lanzar peticiones fallidas.
+El script que automatiza estas comprobaciones tampoco se publica —también vivía en
+`target/`—; los fragmentos siguientes muestran el método seguido y permiten
+reproducirlo a mano.
 
 ### 5.1 Conectar
 
@@ -222,7 +240,7 @@ Select-String -Path src\main\resources\static\**\*.js `
   -Pattern 'innerHTML|outerHTML|insertAdjacentHTML|eval\(|new Function|document\.write'
 ```
 
-En TaskFlow no hay coincidencias. Los datos de la API se pintan con `textContent`
+En VPlan no hay coincidencias. Los datos de la API se pintan con `textContent`
 y `createElement`. Además:
 
 - Solo se llama a `/api/tareas`; no hay CDN ni peticiones externas.

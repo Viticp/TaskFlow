@@ -8,7 +8,7 @@
 
 ## 1. Objetivo
 
-Cerrar TaskFlow como aplicación personal para Windows 11 sin añadir funciones al
+Cerrar VPlan como aplicación personal para Windows 11 sin añadir funciones al
 producto:
 
 - Arrancar y parar con un solo comando.
@@ -45,7 +45,7 @@ se mostraron secretos; no se hizo commit ni push.
 |---|---|
 | `scripts/start-taskflow.ps1` | Arranque diario con preflight, health, log y PID |
 | `scripts/stop-taskflow.ps1` | Parada segura, liberación del puerto y limpieza de Maven |
-| `scripts/create-shortcuts.ps1` | Accesos directos "TaskFlow" y "Detener TaskFlow" |
+| `scripts/create-shortcuts.ps1` | Accesos directos "VPlan" y "Detener VPlan" |
 | `docs/USO-DIARIO.md` | Guía corta de arranque, parada, copias y problemas |
 | `docs/colaboracion/FASE-09.md` | Este informe |
 
@@ -79,7 +79,7 @@ Comprobado con `git diff --name-only`: ningún archivo de `src/`, `pom.xml`,
 2. Exige `TASKFLOW_DB_PASSWORD` sin imprimirla.
 3. Verifica JDK 21+ y MySQL en `127.0.0.1:3306`.
 4. Si el puerto 8080 está ocupado:
-   - TaskFlow: espera health y abre el navegador; no duplica.
+   - VPlan: espera health y abre el navegador; no duplica.
    - Otro proceso: se niega y muestra PID y nombre.
 5. Arranca `mvnw spring-boot:run` mediante un wrapper `.cmd` en segundo plano.
 6. Redirige toda la salida a `logs/taskflow-AAAA-MM-DD_HHmmss.log`.
@@ -96,7 +96,7 @@ Opciones: `-NoBrowser`, `-TimeoutSeconds`, `-Foreground`, `-NoPause`.
 `stop-taskflow.ps1`:
 
 1. Lee `logs/taskflow.pid` y el proceso que escucha en 8080.
-2. Verifica que es Java y que su línea de comandos contiene TaskFlow.
+2. Verifica que es Java y que su línea de comandos contiene VPlan.
 3. Intenta un cierre ordenado; si no termina, fuerza el árbol del proceso.
 4. Detiene también el lanzador de Maven.
 5. Espera a que el puerto quede libre y borra el PID.
@@ -110,8 +110,8 @@ ya confirmadas. El modo `-Foreground` conserva el `Ctrl+C` clásico.
 
 `create-shortcuts.ps1` crea dos `.lnk` con `powershell.exe -NoProfile -File`:
 
-- `C:\Users\victor.curper\Desktop\TaskFlow.lnk`
-- `C:\Users\victor.curper\Desktop\Detener TaskFlow.lnk`
+- `%USERPROFILE%\Desktop\VPlan.lnk`
+- `%USERPROFILE%\Desktop\Detener VPlan.lnk`
 
 Ventana normal, directorio de trabajo del proyecto y sin permisos de
 administrador.
@@ -125,13 +125,13 @@ administrador.
 | Escenario | Resultado |
 |---|---|
 | Arranque desde parado | Health `UP`; log de 7.571 bytes; PID 21544; puerto 8080 en `127.0.0.1` |
-| Segundo arranque | Detectó TaskFlow, no duplicó y salió con código 0 |
+| Segundo arranque | Detectó VPlan, no duplicó y salió con código 0 |
 | Puerto 8080 ocupado por PowerShell | Se negó, mostró PID 5340 y salió con código 1; el proceso ajeno siguió vivo |
-| Parada normal | Puerto libre, PID borrado y ningún Java de TaskFlow |
+| Parada normal | Puerto libre, PID borrado y ningún Java de VPlan |
 | Parada sin aplicación | Mensaje claro y código 0 |
 | Parada con proceso ajeno | Se negó y el proceso siguió vivo |
-| Acceso directo "TaskFlow" | Arrancó y respondió `UP` |
-| Acceso directo "Detener TaskFlow" | Paró la aplicación y dejó el puerto libre |
+| Acceso directo "VPlan" | Arrancó y respondió `UP` |
+| Acceso directo "Detener VPlan" | Paró la aplicación y dejó el puerto libre |
 
 **8 / 8 escenarios correctos.**
 
@@ -142,7 +142,7 @@ proceso ajeno (sería destructivo y no era necesario).
 ### 5.2 Persistencia
 
 1. Se creó la tarea temporal `FASE9_TEMP_persistencia` (id 72).
-2. Se paró TaskFlow con `stop-taskflow.ps1`.
+2. Se paró VPlan con `stop-taskflow.ps1`.
 3. Se volvió a arrancar con `start-taskflow.ps1`.
 4. `GET /api/tareas/72` devolvió la misma tarea, estado `PENDIENTE`.
 5. Se eliminó la tarea.
@@ -167,7 +167,7 @@ del esquema y del historial de Flyway.
 | Prueba | Resultado |
 |---|---|
 | Archivo inexistente | `No existe el archivo de copia de seguridad...` |
-| Archivo sin tablas | `El archivo no parece una copia completa de TaskFlow...` |
+| Archivo sin tablas | `El archivo no parece una copia completa de VPlan...` |
 | Aplicación en marcha | `Hay algo escuchando en el puerto 8080...` |
 | Confirmación con `NO` | `Restauracion cancelada. No se ha modificado nada.` |
 | Base `taskflow_restore_test` | **No ejecutada**: `ERROR 1044 (42000): Access denied for user 'taskflow_app'@'localhost' to database 'taskflow_restore_test'` |
@@ -243,11 +243,10 @@ Después se puede repetir con:
 
 ### 6.3 Publicación
 
-- `https://github.com/Viticp/TaskFlow` devuelve **404** sin autenticación; la
-  cuenta existe pero no tiene repositorios públicos. El repositorio privado aún no
-  se ha creado o no es visible.
+- Cuenta de GitHub del autor: `https://github.com/Viticp`. El repositorio
+  público de VPlan todavía no se ha creado.
 - `user.name` y `user.email` siguen sin configurar.
-- No hay `LICENSE`: se añadirá MIT solo si el repositorio pasa a público (D3/D5).
+- No hay `LICENSE`: la licencia se decidirá antes de publicar.
 - **0 commits y 0 push.**
 
 ### 6.4 Otras limitaciones
@@ -311,7 +310,7 @@ Fase 8 y la Fase 7 que solo cambian la carpeta de capturas a
 
 ## 9. Conclusión
 
-TaskFlow queda cerrado para uso personal en Windows 11: arranca y para con un
+VPlan queda cerrado para uso personal en Windows 11: arranca y para con un
 comando o un doble clic, registra sus logs, conserva las tareas al reiniciar,
 permite copias reales y protege la restauración con comprobaciones. La aplicación
 está parada, con 0 tareas, Flyway correcto y sin procesos abiertos.

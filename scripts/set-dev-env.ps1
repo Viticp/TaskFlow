@@ -1,4 +1,4 @@
-# TaskFlow - Entorno de desarrollo SOLO para la sesion actual de PowerShell.
+# VPlan - Entorno de desarrollo SOLO para la sesion actual de PowerShell.
 #
 # Uso (importante: el punto inicial hace que los cambios afecten a TU sesion):
 #     . .\scripts\set-dev-env.ps1
@@ -175,7 +175,7 @@ if (Test-Path -LiteralPath $envFile) {
 $javacVersion = $jdk.Version -replace "^javac\s+", ""
 
 Write-Host ""
-Write-Host "Entorno TaskFlow cargado (solo esta sesion)" -ForegroundColor Green
+Write-Host "Entorno VPlan cargado (solo esta sesion)" -ForegroundColor Green
 Write-Host "  JAVA_HOME = $env:JAVA_HOME"
 Write-Host "  javac     = $javacVersion"
 Write-Host "  Maven     = .\mvnw.cmd (Maven Wrapper)"

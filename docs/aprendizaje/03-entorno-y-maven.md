@@ -6,7 +6,7 @@ En un equipo puede haber varias instalaciones de Java, y la que responde a `java
 puede ser antigua. Es habitual encontrar Java 8 en el `PATH` y un JDK 11 en
 `JAVA_HOME`, aunque haya un JDK 21 o 25 instalado aparte.
 
-Spring Boot 3.5 exige **Java 17 o superior** y TaskFlow compila para Java 21, así
+Spring Boot 3.5 exige **Java 17 o superior** y VPlan compila para Java 21, así
 que necesita un **JDK 21 o superior**. Para no depender de una ruta concreta, el
 script prueba candidatos en este orden y se queda con el primero que sea válido:
 

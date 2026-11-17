@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Conseguir que TaskFlow arranque con Spring Boot, se conecte a MySQL mediante
+Conseguir que VPlan arranque con Spring Boot, se conecte a MySQL mediante
 Flyway y exponga `GET /api/health` con una comprobación real de la base de datos.
 
 ## Responsable de escritura
@@ -154,7 +154,7 @@ por el marcador al ejecutar el script y el archivo se quedó así.
 
 ## Nota posterior: cambio de alcance
 
-Después de aprobar esta fase, se decidió convertir TaskFlow en una aplicación
+Después de aprobar esta fase, se decidió convertir VPlan en una aplicación
 personal **sin login ni registro**. Eso eliminó Spring Security, `SecurityConfig`,
 la tabla `usuarios` y `tareas.usuario_id` mediante la migración
 `V2__single_user.sql`.

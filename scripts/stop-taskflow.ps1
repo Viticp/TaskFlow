@@ -1,4 +1,4 @@
-# TaskFlow - Parada de uso diario.
+# VPlan - Parada de uso diario.
 #
 # Uso:
 #     .\scripts\stop-taskflow.ps1
@@ -6,17 +6,17 @@
 #
 # Que hace:
 #   1. Busca el proceso que escucha en el puerto 8080 y lee logs/taskflow.pid.
-#   2. Comprueba que el proceso es realmente TaskFlow.
-#   3. Intenta un cierre ordenado y, si no termina, fuerza el proceso de TaskFlow.
+#   2. Comprueba que el proceso es realmente VPlan.
+#   3. Intenta un cierre ordenado y, si no termina, fuerza el proceso de VPlan.
 #   4. Detiene tambien el lanzador de Maven para no dejar procesos abiertos.
 #   5. Comprueba que el puerto 8080 queda libre y borra el archivo de PID.
 #
 # Seguridad:
 #   - Nunca detiene un proceso ajeno si no se pasa -Force.
 #   - Con -Force se usa solo cuando la persona esta segura de que el proceso es
-#     TaskFlow o de que quiere liberar el puerto.
+#     VPlan o de que quiere liberar el puerto.
 #
-# Si TaskFlow se arranco a mano con "mvnw spring-boot:run", este script puede
+# Si VPlan se arranco a mano con "mvnw spring-boot:run", este script puede
 # detener la aplicacion, pero la ventana de Maven debe cerrarse a mano.
 
 [CmdletBinding()]
@@ -137,7 +137,7 @@ $launcherPid = 0
 
 try {
     Write-Host ""
-    Write-Host "TaskFlow - parada" -ForegroundColor Cyan
+    Write-Host "VPlan - parada" -ForegroundColor Cyan
 
     $pidInfo = Read-TaskFlowPidFile
     if ($pidInfo) {
@@ -161,7 +161,7 @@ try {
             Remove-Item -LiteralPath $pidFile -Force -ErrorAction SilentlyContinue
         }
 
-        Write-Host "  TaskFlow no esta en marcha. El puerto 8080 esta libre." -ForegroundColor Green
+        Write-Host "  VPlan no esta en marcha. El puerto 8080 esta libre." -ForegroundColor Green
         exit 0
     }
 
@@ -174,13 +174,13 @@ try {
     if (-not $isTaskFlow) {
         $description = "$($details.Name) (PID $appPid)"
         if (-not $Force) {
-            throw "El puerto 8080 lo ocupa $description, que no parece TaskFlow. No se ha detenido nada. Si estas seguro, repite con -Force."
+            throw "El puerto 8080 lo ocupa $description, que no parece VPlan. No se ha detenido nada. Si estas seguro, repite con -Force."
         }
-        Write-Host "  AVISO: el proceso $description no se ha podido verificar como TaskFlow." -ForegroundColor Yellow
+        Write-Host "  AVISO: el proceso $description no se ha podido verificar como VPlan." -ForegroundColor Yellow
         Write-Host "  -Force autoriza a detenerlo de todos modos." -ForegroundColor Yellow
     }
 
-    Write-Host "  Deteniendo TaskFlow (PID $appPid, $($details.Name))..."
+    Write-Host "  Deteniendo VPlan (PID $appPid, $($details.Name))..."
     Stop-TaskFlowProcessTree -ProcessId $appPid
 
     $deadline = (Get-Date).AddSeconds([Math]::Max(5, $TimeoutSeconds))
@@ -216,7 +216,7 @@ try {
     }
 
     Write-Host ""
-    Write-Host "TaskFlow detenido. El puerto 8080 esta libre." -ForegroundColor Green
+    Write-Host "VPlan detenido. El puerto 8080 esta libre." -ForegroundColor Green
     exit 0
 } catch {
     Write-TaskFlowError $_.Exception.Message

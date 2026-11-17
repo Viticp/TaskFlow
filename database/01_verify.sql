@@ -1,4 +1,4 @@
--- TaskFlow - Comprobaciones de solo lectura
+-- VPlan - Comprobaciones de solo lectura
 -- Ejecutar como root. No modifica nada.
 
 -- 1. La base de datos existe y usa utf8mb4

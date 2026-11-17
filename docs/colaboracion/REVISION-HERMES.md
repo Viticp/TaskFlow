@@ -1,4 +1,4 @@
-# Revisión independiente — Fase 3 TaskFlow
+# Revisión independiente — Fase 3 VPlan
 
 **Fecha:** 2026-11-17  
 **Revisor:** Hermes Agent (modo solo lectura)  

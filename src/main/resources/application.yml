@@ -33,7 +33,7 @@ spring:
     locations: classpath:db/migration
 
 server:
-  # Solo loopback: TaskFlow es una aplicacion privada y no debe ser accesible
+  # Solo loopback: VPlan es una aplicacion privada y no debe ser accesible
   # desde la red local. http://localhost:8080 sigue funcionando igual.
   address: 127.0.0.1
   port: 8080

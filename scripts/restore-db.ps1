@@ -1,11 +1,11 @@
-# TaskFlow - Restauracion de una copia de seguridad.
+# VPlan - Restauracion de una copia de seguridad.
 #
 # Uso:
 #     .\scripts\restore-db.ps1 -BackupFile ".\backups\taskflow-2026-11-17_120000.sql"
 #
 # La restauracion REEMPLAZA el contenido actual de la base de datos. Por eso:
-#   1. Comprueba que el archivo existe y contiene las tablas de TaskFlow.
-#   2. Se niega a continuar si algo escucha en el puerto 8080 (TaskFlow abierto).
+#   1. Comprueba que el archivo existe y contiene las tablas de VPlan.
+#   2. Se niega a continuar si algo escucha en el puerto 8080 (VPlan abierto).
 #   3. Pide escribir RESTAURAR antes de tocar la base de datos.
 #
 # Para automatizaciones (solo con la aplicacion parada) se puede usar -Force,
@@ -38,13 +38,13 @@ if (-not (Test-Path -LiteralPath $BackupFile)) {
 $resolvedBackup = (Resolve-Path -LiteralPath $BackupFile).Path
 $fileInfo = Get-Item -LiteralPath $resolvedBackup
 if ($fileInfo.Length -lt 100) {
-    throw "El archivo '$resolvedBackup' es demasiado pequeno para ser una copia de TaskFlow."
+    throw "El archivo '$resolvedBackup' es demasiado pequeno para ser una copia de VPlan."
 }
 
 $content = Get-Content -LiteralPath $resolvedBackup -Raw -Encoding UTF8
 if (-not $content.Contains('CREATE TABLE `tareas`') -or
     -not $content.Contains('CREATE TABLE `flyway_schema_history`')) {
-    throw "El archivo no parece una copia completa de TaskFlow: debe contener las tablas tareas y flyway_schema_history."
+    throw "El archivo no parece una copia completa de VPlan: debe contener las tablas tareas y flyway_schema_history."
 }
 
 if ($content -match '(?im)^\s*(CREATE\s+DATABASE|USE\s+`?[A-Za-z0-9_]+`?\s*;)') {
@@ -53,7 +53,7 @@ if ($content -match '(?im)^\s*(CREATE\s+DATABASE|USE\s+`?[A-Za-z0-9_]+`?\s*;)') 
 
 $listener = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
 if ($listener -and -not $Force) {
-    throw "Hay algo escuchando en el puerto 8080. Deten TaskFlow con .\scripts\stop-taskflow.ps1 (o Ctrl+C si lo arrancaste a mano) antes de restaurar. Si estas seguro de que no es TaskFlow, repite con -Force."
+    throw "Hay algo escuchando en el puerto 8080. Deten VPlan con .\scripts\stop-taskflow.ps1 (o Ctrl+C si lo arrancaste a mano) antes de restaurar. Si estas seguro de que no es VPlan, repite con -Force."
 }
 
 $envValues = Read-DotEnvFile -Path (Join-Path $projectRoot ".env.local")
@@ -87,7 +87,7 @@ if (-not $MySqlPath) {
 $sizeKb = [math]::Round($fileInfo.Length / 1KB, 1)
 
 Write-Host ""
-Write-Host "Restauracion de TaskFlow" -ForegroundColor Cyan
+Write-Host "Restauracion de VPlan" -ForegroundColor Cyan
 Write-Host "  Base de datos : $Database ($DbHost`:$Port)"
 Write-Host "  Archivo       : $resolvedBackup ($sizeKb KB)"
 Write-Host ""
@@ -169,4 +169,4 @@ foreach ($migration in @($migrations)) {
 }
 Write-Host "  Tareas restauradas: $taskCount"
 Write-Host ""
-Write-Host "Arranca TaskFlow y comprueba http://localhost:8080/api/health"
+Write-Host "Arranca VPlan y comprueba http://localhost:8080/api/health"

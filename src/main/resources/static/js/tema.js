@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TaskFlow · tema.js
+   VPlan · tema.js
    --------------------------------------------------------------------------
    Fase 7: tema claro/oscuro.
    - El script inline del <head> aplica el tema antes del primer pintado.
