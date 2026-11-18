@@ -48,22 +48,36 @@ Decisiones:
   `2`. Si se guardara el ordinal, reordenar el enum corrompería los datos
   existentes.
 - **`LocalDate` para `fechaLimite`** porque el requisito es una fecha, no una
-  hora. `LocalDateTime` para las marcas de tiempo.
-- **`LocalDateTime` en UTC y recortado a segundos**: la columna es
-  `TIMESTAMP` (sin fracciones). Si se guardaran nanosegundos, la respuesta del
-  `POST` y un `GET` posterior darían valores distintos. `truncatedTo(SECONDS)`
-  hace que la API devuelva exactamente lo que hay en la base de datos.
+  hora. `LocalDateTime` para `creadoEn` y `actualizadoEn`, e `Instant` para
+  `completadoEn`.
+- **Marcas recortadas a segundos**: las columnas son `TIMESTAMP` (sin
+  fracciones). Si se guardaran nanosegundos, la respuesta del `POST` y un `GET`
+  posterior darían valores distintos. `truncatedTo(SECONDS)` hace que la API
+  devuelva exactamente lo que hay en la base de datos.
+- **`completadoEn` es un `Instant`**, no un `LocalDateTime`: un instante
+  absoluto no depende de la zona de la máquina. La conexión fija la sesión de
+  MySQL en UTC (`connectionTimeZone=UTC` y
+  `forceConnectionTimeZoneToSession=true`) y Hibernate usa
+  `hibernate.jdbc.time_zone: UTC`. Sin esa combinación, el driver aplicaba la
+  zona de la JVM y la fecha guardada se desplazaba una hora.
 - **`@PrePersist` / `@PreUpdate`** rellenan `creadoEn` y `actualizadoEn`. Se
   podría usar `@CreationTimestamp`/`@UpdateTimestamp` de Hibernate, pero así el
   comportamiento está a la vista al leer la clase.
 - **`estado` por defecto `PENDIENTE`** en `@PrePersist`: una tarea nueva sin
   estado explícito no puede quedar en `null`.
+- **`completadoEn` es la fecha real de finalización**, no la de vencimiento ni
+  la de última edición. La migración `V3` añade `completado_en TIMESTAMP NULL`
+  sin tocar `V1` ni `V2`.
+- **`setEstado()` mantiene coherente `completadoEn`**: lo registra al entrar en
+  `COMPLETADA`, lo conserva al editar una tarea ya completada y lo limpia al
+  reabrirla. Si una tarea antigua ya estaba completada y no tiene fecha, se
+  queda a `null`: no se inventa un dato histórico.
 - **Constructor `protected Tarea()`**: lo exige JPA. El constructor público
   recibe los datos de negocio.
 
-La tabla **ya existía** (`V1`, adaptada por `V2`). No se ha creado ninguna
-migración nueva: las columnas y restricciones `CHECK` actuales ya validan
-prioridad y estado.
+La tabla **ya existía** (`V1`, adaptada por `V2`). `V3` solo añade la columna de
+finalización; las restricciones `CHECK` actuales siguen validando prioridad y
+estado.
 
 ## 3. El repositorio
 
@@ -98,6 +112,9 @@ Todas ordenan por `id` ascendente para que el resultado sea predecible.
   las ventajas de JPA que conviene saber explicar.
 - Si no se envía `estado` al actualizar, se conserva el actual. Así se puede
   editar el título sin reenviar todo.
+- La fecha de finalización **no viaja en `TareaRequest`**: la decide el servidor
+  al cambiar el estado. De este modo el cliente no puede falsear cuándo se
+  completó una tarea.
 - `limpiar()` quita espacios y convierte `"   "` en `null`: una descripción vacía
   se guarda como ausente, no como cadena vacía.
 
@@ -113,7 +130,10 @@ Todas ordenan por `id` ascendente para que el resultado sea predecible.
 | `estado` | opcional |
 | `fechaLimite` | opcional |
 
-`TareaResponse` (salida) incluye `id`, `creadoEn` y `actualizadoEn`.
+`TareaResponse` (salida) incluye `id`, `creadoEn`, `actualizadoEn` y
+`completadoEn`. Este último se serializa como **instante UTC con sufijo `Z`**
+para que el navegador pueda situarlo en el día local de la persona; las tareas
+antiguas completadas sin fecha devuelven `null`.
 
 **Por qué no devolver la entidad directamente**: si mañana se añade una columna
 interna, aparecería en el JSON sin querer. El DTO fija el contrato de la API y
@@ -196,16 +216,15 @@ curl -i -X DELETE http://localhost:8080/api/tareas/1
 
 | Test | Nivel | Qué cubre |
 |---|---|---|
-| `TareaRepositoryTest` | repositorio + H2 | Guardar, recuperar y los cuatro filtros |
-| `TareaServiceTest` | servicio + H2 | Estado por defecto, normalización, actualización, 404, borrado |
-| `TareaControllerTest` | API completa (MockMvc) | Códigos HTTP, JSON, validación, filtros y errores |
+| `TareaRepositoryTest` | repositorio + H2 | Guardar, recuperar, fecha de finalización y los cuatro filtros |
+| `TareaServiceTest` | servicio + H2 | Estado por defecto, normalización, actualización, 404, borrado y ciclo de `completadoEn` |
+| `TareaControllerTest` | API completa (MockMvc) | Códigos HTTP, JSON, validación, filtros, errores y fecha UTC de finalización |
 
 Los tests usan H2 en memoria con el **mismo esquema** que MySQL (Flyway aplica
-`V1` y `V2`). Cada test es transaccional y se revierte, así que no dependen del
-orden ni dejan datos.
+`V1`, `V2` y `V3`). Cada test es transaccional y se revierte, así que no
+dependen del orden ni dejan datos.
 
-La suma total del proyecto es **34 tests** (los 4 que ya existían de las fases
-anteriores incluidos).
+La suma total del proyecto es **42 tests** (incluidos los de fases anteriores).
 
 ## 10. Limitaciones conocidas
 
@@ -213,8 +232,11 @@ anteriores incluidos).
   suficiente; con miles de tareas habría que añadir `Pageable`.
 - **Sin autenticación**: es una decisión de diseño (app local). No debe
   publicarse en internet.
-- **`actualizadoEn` con resolución de segundos**: si editas dos veces en el
-  mismo segundo, la marca no cambia. Es una consecuencia de la columna
-  `TIMESTAMP` existente; cambiarla exigiría una migración.
+- **`actualizadoEn` y `completadoEn` con resolución de segundos**: si editas o
+  completas dos veces en el mismo segundo, la marca no cambia. Es una
+  consecuencia de las columnas `TIMESTAMP`; cambiarlas exigiría otra migración.
+- **Tareas antiguas completadas sin fecha**: se conservan con
+  `completadoEn = null` y no aparecen en el gráfico semanal. Se documenta así
+  para no inventar actividad que no se registró.
 - **`PUT` es actualización completa**, no parcial. Un `PATCH` parcial sería una
   mejora futura.

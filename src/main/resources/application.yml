@@ -7,7 +7,10 @@ spring:
     # TASKFLOW_DB_PASSWORD es obligatoria; si falta, la aplicacion no arranca.
     # Esta URL es SOLO para uso local (MySQL en el mismo equipo, sin TLS).
     # Si algun dia se publica, define TASKFLOW_DB_URL con sslMode=VERIFY_IDENTITY.
-    url: "${TASKFLOW_DB_URL:jdbc:mysql://127.0.0.1:3306/taskflow?sslMode=DISABLED&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=UTC}"
+    # connectionTimeZone + forceConnectionTimeZoneToSession fijan la sesión de
+    # MySQL en UTC. Sin eso, el servidor devolvía los TIMESTAMP en la zona del
+    # sistema y las marcas se desplazaban al leerlas desde Java.
+    url: "${TASKFLOW_DB_URL:jdbc:mysql://127.0.0.1:3306/taskflow?sslMode=DISABLED&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true}"
     username: "${TASKFLOW_DB_USER:taskflow_app}"
     password: "${TASKFLOW_DB_PASSWORD}"
     hikari:
@@ -27,6 +30,16 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          # Sin esto, Chrome puede reutilizar el HTML y el CSS antiguos sin
+          # preguntar al servidor (cache heuristica) y una actualizacion de la
+          # interfaz no se ve al reabrir VPlan. "no-cache" obliga a revalidar;
+          # si el archivo no cambia, la respuesta sigue siendo un 304 rapido.
+          no-cache: true
 
   flyway:
     enabled: true

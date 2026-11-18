@@ -11,6 +11,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -26,8 +27,10 @@ import java.time.temporal.ChronoUnit;
  * codigo. La base de datos tiene {@code DEFAULT CURRENT_TIMESTAMP}, pero no se
  * depende de el: si la aplicacion inserta una fila, envia la fecha.</p>
  *
- * <p>Se guardan en UTC. La conexion usa {@code hibernate.jdbc.time_zone: UTC}
- * y {@code serverTimezone=UTC}, asi que la hora es consistente entre MySQL y H2.</p>
+ * <p>Las marcas de creación y actualización se calculan en UTC y se recortan a
+ * segundos; {@code completadoEn} es un {@link Instant} absoluto. La conexión
+ * fija la sesión de MySQL en UTC ({@code connectionTimeZone}) y Hibernate usa
+ * {@code hibernate.jdbc.time_zone: UTC}.</p>
  */
 @Entity
 @Table(name = "tareas")
@@ -53,6 +56,19 @@ public class Tarea {
 
     @Column(name = "fecha_limite")
     private LocalDate fechaLimite;
+
+    /**
+     * Momento real en el que la tarea paso a COMPLETADA. Es nullable porque las
+     * tareas completadas antes de la migracion V3 no tienen una fecha fiable y
+     * no se rellena con datos inventados.
+     *
+     * <p>Se guarda como {@link Instant} para que el instante sea absoluto y no
+     * dependa de la zona horaria de la maquina que lee la fila. Con
+     * {@code LocalDateTime} el driver aplicaba la zona de la JVM y el instante
+     * almacenado se desplazaba una hora.</p>
+     */
+    @Column(name = "completado_en")
+    private Instant completadoEn;
 
     @Column(name = "creado_en", nullable = false, updatable = false)
     private LocalDateTime creadoEn;
@@ -80,6 +96,9 @@ public class Tarea {
         if (this.estado == null) {
             this.estado = Estado.PENDIENTE;
         }
+        if (this.estado == Estado.COMPLETADA && this.completadoEn == null) {
+            this.completadoEn = ahoraInstante();
+        }
     }
 
     @PreUpdate
@@ -94,6 +113,10 @@ public class Tarea {
      */
     private static LocalDateTime ahora() {
         return LocalDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS);
+    }
+
+    private static Instant ahoraInstante() {
+        return Instant.now().truncatedTo(ChronoUnit.SECONDS);
     }
 
     public Long getId() {
@@ -128,8 +151,22 @@ public class Tarea {
         return estado;
     }
 
+    /**
+     * Cambia el estado manteniendo coherente la fecha de finalizacion:
+     * se marca al entrar en COMPLETADA, se conserva si ya lo estaba (aunque
+     * sea una tarea antigua sin fecha) y se limpia al reabrirla.
+     */
     public void setEstado(Estado estado) {
+        Estado anterior = this.estado;
         this.estado = estado;
+
+        if (estado == Estado.COMPLETADA && anterior != Estado.COMPLETADA) {
+            if (this.completadoEn == null) {
+                this.completadoEn = ahoraInstante();
+            }
+        } else if (estado != Estado.COMPLETADA) {
+            this.completadoEn = null;
+        }
     }
 
     public LocalDate getFechaLimite() {
@@ -138,6 +175,10 @@ public class Tarea {
 
     public void setFechaLimite(LocalDate fechaLimite) {
         this.fechaLimite = fechaLimite;
+    }
+
+    public Instant getCompletadoEn() {
+        return completadoEn;
     }
 
     public LocalDateTime getCreadoEn() {

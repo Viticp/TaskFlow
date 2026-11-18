@@ -90,20 +90,28 @@ const textoVacioDashboard = document.getElementById('texto-vacio-dashboard');
 const progresoPorcentaje = document.getElementById('progreso-porcentaje');
 const progresoDetalle = document.getElementById('progreso-detalle');
 const progresoNota = document.getElementById('progreso-nota');
-const progresoBarra = document.getElementById('progreso-barra');
-const progresoRelleno = document.getElementById('progreso-relleno');
+const progresoAnillo = document.getElementById('progreso-anillo');
 const metricaVencidas = document.getElementById('metrica-vencidas');
 const metricaHoy = document.getElementById('metrica-hoy');
 const metricaProximos = document.getElementById('metrica-proximos');
 const metricaSinFecha = document.getElementById('metrica-sin-fecha');
 const totalPrioridad = document.getElementById('total-prioridad');
-const totalEstado = document.getElementById('total-estado');
-const totalCarga = document.getElementById('total-carga');
-const cargaGrafico = document.getElementById('carga-grafico');
-const cargaVacio = document.getElementById('carga-vacio');
+
+const totalHoy = document.getElementById('total-hoy');
+const cargaHoy = document.getElementById('carga-hoy');
+const listaHoy = document.getElementById('lista-hoy');
+const vacioHoy = document.getElementById('vacio-hoy');
+const tituloVacioHoy = document.getElementById('titulo-vacio-hoy');
+const textoVacioHoy = document.getElementById('texto-vacio-hoy');
+
+const totalSemana = document.getElementById('total-semana');
+const graficoSemana = document.getElementById('grafico-semana');
+const semanaVacio = document.getElementById('semana-vacio');
+const semanaNota = document.getElementById('semana-nota');
 
 const plantillaTarea = document.getElementById('plantilla-tarea');
 const plantillaProxima = document.getElementById('plantilla-proxima');
+const plantillaHoy = document.getElementById('plantilla-hoy');
 const zonaAvisos = document.getElementById('zona-avisos');
 
 const dialogoTarea = document.getElementById('dialogo-tarea');
@@ -128,6 +136,7 @@ let tareaEnEdicion = null;
 let tareaAEliminar = null;
 let guardandoFormulario = false;
 let eliminandoTarea = false;
+let completandoTarea = null;
 let numeroCarga = 0;
 let focoPendiente = null;
 
@@ -445,77 +454,113 @@ function actualizarDistribucion(selector, cuenta, total, cargando = false) {
     });
 }
 
-function actualizarBarraApilada(estado, total, cargando = false) {
-    document.querySelectorAll('#barra-apilada-estado [data-segmento]').forEach((segmento) => {
-        const cantidad = estado[segmento.dataset.segmento] || 0;
-        segmento.style.width = cargando || !total ? '0%' : `${(cantidad / total) * 100}%`;
-    });
-}
-
 function ponerAnaliticaCargando() {
     progresoPorcentaje.textContent = '–';
     progresoDetalle.textContent = 'Cargando…';
     progresoNota.textContent = 'Calculando el avance…';
-    progresoRelleno.style.width = '0%';
-    progresoBarra.setAttribute('aria-valuenow', '0');
+    progresoAnillo.style.setProperty('--valor', '0%');
+    progresoAnillo.setAttribute('aria-valuenow', '0');
+    progresoAnillo.setAttribute('aria-valuetext', 'Cargando');
 
     [metricaVencidas, metricaHoy, metricaProximos, metricaSinFecha].forEach((elemento) => {
         elemento.textContent = '–';
     });
 
     totalPrioridad.textContent = '–';
-    totalEstado.textContent = '–';
-    totalCarga.textContent = '–';
-
     actualizarDistribucion('[data-distribucion="prioridad"]', {}, 0, true);
-    actualizarDistribucion('[data-distribucion="estado"]', {}, 0, true);
-    actualizarBarraApilada({}, 0, true);
 
-    cargaGrafico.replaceChildren();
-    cargaGrafico.hidden = true;
-    cargaVacio.hidden = false;
-    cargaVacio.textContent = 'Cargando la carga semanal…';
+    totalHoy.textContent = '–';
+    cargaHoy.hidden = false;
+    listaHoy.replaceChildren();
+    listaHoy.hidden = true;
+    vacioHoy.hidden = true;
+
+    totalSemana.textContent = '–';
+    graficoSemana.replaceChildren();
+    graficoSemana.hidden = true;
+    semanaVacio.hidden = false;
+    semanaVacio.textContent = 'Cargando el resumen semanal…';
+    semanaNota.textContent = 'Se cuenta el día en que completas cada tarea.';
 }
 
 function ponerAnaliticaNoDisponible() {
     progresoPorcentaje.textContent = '–';
     progresoDetalle.textContent = 'No disponible';
     progresoNota.textContent = 'No se pudieron calcular las analíticas.';
-    progresoRelleno.style.width = '0%';
-    progresoBarra.setAttribute('aria-valuenow', '0');
+    progresoAnillo.style.setProperty('--valor', '0%');
+    progresoAnillo.setAttribute('aria-valuenow', '0');
+    progresoAnillo.setAttribute('aria-valuetext', 'No disponible');
 
     [metricaVencidas, metricaHoy, metricaProximos, metricaSinFecha].forEach((elemento) => {
         elemento.textContent = '–';
     });
 
     totalPrioridad.textContent = 'No disponible';
-    totalEstado.textContent = 'No disponible';
-    totalCarga.textContent = 'No disponible';
-
     actualizarDistribucion('[data-distribucion="prioridad"]', {}, 0, true);
-    actualizarDistribucion('[data-distribucion="estado"]', {}, 0, true);
-    actualizarBarraApilada({}, 0, true);
 
-    cargaGrafico.replaceChildren();
-    cargaGrafico.hidden = true;
-    cargaVacio.hidden = false;
-    cargaVacio.textContent = 'No disponible';
+    totalHoy.textContent = 'No disponible';
+    cargaHoy.hidden = true;
+    listaHoy.replaceChildren();
+    listaHoy.hidden = true;
+    vacioHoy.hidden = false;
+    tituloVacioHoy.textContent = 'No disponible';
+    textoVacioHoy.textContent = 'No se pudieron cargar las tareas de hoy.';
+
+    totalSemana.textContent = 'No disponible';
+    graficoSemana.replaceChildren();
+    graficoSemana.hidden = true;
+    semanaVacio.hidden = false;
+    semanaVacio.textContent = 'No disponible';
+    semanaNota.textContent = 'No se pudo calcular el resumen semanal.';
 }
 
-function renderizarCarga(dias) {
+function renderizarSemana() {
+    const hoy = inicioDelDia();
+    const dias = [];
+
+    // Los últimos siete días incluyen hoy: es la lectura natural de "esta semana".
+    for (let indice = 6; indice >= 0; indice -= 1) {
+        const fecha = sumarDias(hoy, -indice);
+        dias.push({ fecha, clave: claveFecha(fecha), total: 0 });
+    }
+    const posicionPorFecha = new Map(dias.map((dia, indice) => [dia.clave, indice]));
+    let sinFecha = 0;
+
+    tareas.forEach((tarea) => {
+        if (tarea.estado !== 'COMPLETADA') {
+            return;
+        }
+        if (!tarea.completadoEn) {
+            sinFecha += 1;
+            return;
+        }
+        const fecha = new Date(tarea.completadoEn);
+        if (Number.isNaN(fecha.getTime())) {
+            sinFecha += 1;
+            return;
+        }
+        const posicion = posicionPorFecha.get(claveFecha(fecha));
+        if (posicion !== undefined) {
+            dias[posicion].total += 1;
+        }
+    });
+
     const total = dias.reduce((suma, dia) => suma + dia.total, 0);
-    totalCarga.textContent = textoTotal(total);
-    cargaGrafico.replaceChildren();
+    totalSemana.textContent = textoTotal(total);
+    semanaNota.textContent = sinFecha > 0
+        ? 'Las tareas completadas antes de esta versión no tienen fecha registrada y no se incluyen.'
+        : 'Se cuenta el día en que completas cada tarea.';
+    graficoSemana.replaceChildren();
 
     if (total === 0) {
-        cargaGrafico.hidden = true;
-        cargaVacio.hidden = false;
-        cargaVacio.textContent = 'No hay vencimientos en los próximos 7 días.';
+        graficoSemana.hidden = true;
+        semanaVacio.hidden = false;
+        semanaVacio.textContent = 'Aún no hay tareas completadas en los últimos 7 días.';
         return;
     }
 
-    cargaGrafico.hidden = false;
-    cargaVacio.hidden = true;
+    graficoSemana.hidden = false;
+    semanaVacio.hidden = true;
 
     const maximo = Math.max(...dias.map((dia) => dia.total));
     const formatoDia = new Intl.DateTimeFormat('es-ES', { weekday: 'short' });
@@ -524,62 +569,107 @@ function renderizarCarga(dias) {
         day: 'numeric',
         month: 'long'
     });
+    const claveHoy = claveFecha(hoy);
 
-    dias.forEach(({ fecha, total: cantidad }) => {
+    dias.forEach(({ fecha, clave, total: cantidad }) => {
         const columna = document.createElement('div');
-        columna.className = 'carga-dia';
+        columna.className = `grafico-dia${clave === claveHoy ? ' grafico-dia--hoy' : ''}`;
         columna.setAttribute('role', 'img');
         columna.setAttribute('aria-label',
-            `${cantidad} ${cantidad === 1 ? 'tarea' : 'tareas'} para el ${formatoCompleto.format(fecha)}`);
+            `${cantidad} ${cantidad === 1 ? 'tarea completada' : 'tareas completadas'} el ${formatoCompleto.format(fecha)}`);
 
         const valor = document.createElement('span');
-        valor.className = 'carga-cantidad';
+        valor.className = 'grafico-cantidad';
         valor.textContent = String(cantidad);
 
         const pista = document.createElement('span');
-        pista.className = 'carga-pista';
+        pista.className = 'grafico-pista';
         pista.setAttribute('aria-hidden', 'true');
 
         const relleno = document.createElement('span');
-        relleno.className = 'carga-relleno';
+        relleno.className = `grafico-relleno${cantidad === 0 ? ' grafico-relleno--cero' : ''}`;
         relleno.style.height = cantidad
             ? `${Math.max(8, Math.round((cantidad / maximo) * 100))}%`
-            : '0%';
+            : '2px';
         pista.append(relleno);
 
         const etiqueta = document.createElement('span');
-        etiqueta.className = 'carga-etiqueta';
+        etiqueta.className = 'grafico-etiqueta';
         etiqueta.setAttribute('aria-hidden', 'true');
 
         const semana = document.createElement('span');
-        semana.className = 'carga-dia-semana';
+        semana.className = 'grafico-dia-semana';
         semana.textContent = formatoDia.format(fecha).replace('.', '');
 
         const numero = document.createElement('span');
-        numero.className = 'carga-dia-numero';
+        numero.className = 'grafico-dia-numero';
         numero.textContent = String(fecha.getDate());
 
         etiqueta.append(semana, numero);
         columna.append(valor, pista, etiqueta);
-        cargaGrafico.append(columna);
+        graficoSemana.append(columna);
+    });
+}
+
+function renderizarHoy() {
+    const claveHoy = claveFecha(inicioDelDia());
+    const ordenPrioridad = { ALTA: 0, MEDIA: 1, BAJA: 2 };
+    const deHoy = tareas
+        .filter((tarea) => tarea.estado !== 'COMPLETADA' && tarea.fechaLimite === claveHoy)
+        .sort((a, b) => {
+            const ordenA = ordenPrioridad[a.prioridad] ?? 3;
+            const ordenB = ordenPrioridad[b.prioridad] ?? 3;
+            return ordenA - ordenB || a.id - b.id;
+        });
+
+    cargaHoy.hidden = true;
+    listaHoy.replaceChildren();
+    totalHoy.textContent = textoTotal(deHoy.length);
+    tituloVacioHoy.textContent = 'Nada para hoy';
+    textoVacioHoy.textContent = 'No tienes tareas con fecha límite hoy.';
+
+    if (deHoy.length === 0) {
+        listaHoy.hidden = true;
+        vacioHoy.hidden = false;
+        return;
+    }
+
+    vacioHoy.hidden = true;
+    listaHoy.hidden = false;
+
+    deHoy.forEach((tarea) => {
+        const fila = plantillaHoy.content.firstElementChild.cloneNode(true);
+        fila.dataset.id = String(tarea.id);
+        fila.querySelector('.fila-hoy-titulo').textContent = tarea.titulo;
+
+        configurarPastilla(
+            fila.querySelector('.pastilla-prioridad'),
+            CLASES_PRIORIDAD[tarea.prioridad],
+            ETIQUETAS_PRIORIDAD[tarea.prioridad] || tarea.prioridad
+        );
+        configurarPastilla(
+            fila.querySelector('.pastilla-estado'),
+            CLASES_ESTADO[tarea.estado],
+            ETIQUETAS_ESTADO[tarea.estado] || tarea.estado
+        );
+
+        const boton = fila.querySelector('[data-completar]');
+        boton.dataset.id = String(tarea.id);
+        boton.setAttribute('aria-label', `Completar la tarea ${tarea.titulo}`);
+
+        listaHoy.append(fila);
     });
 }
 
 function renderizarAnalitica() {
     const hoy = inicioDelDia();
+    const limiteProximos = sumarDias(hoy, 7);
     const prioridad = { ALTA: 0, MEDIA: 0, BAJA: 0 };
     const estado = { PENDIENTE: 0, EN_PROCESO: 0, COMPLETADA: 0 };
     let vencidas = 0;
     let paraHoy = 0;
+    let proximos = 0;
     let sinFecha = 0;
-
-    // Los próximos 7 días empiezan mañana: hoy ya tiene su propia métrica.
-    const dias = [];
-    for (let indice = 1; indice <= 7; indice += 1) {
-        const fecha = sumarDias(hoy, indice);
-        dias.push({ fecha, clave: claveFecha(fecha), total: 0 });
-    }
-    const posicionPorFecha = new Map(dias.map((dia, indice) => [dia.clave, indice]));
 
     tareas.forEach((tarea) => {
         if (prioridad[tarea.prioridad] !== undefined) {
@@ -612,10 +702,8 @@ function renderizarAnalitica() {
             paraHoy += 1;
             return;
         }
-
-        const posicion = posicionPorFecha.get(tarea.fechaLimite);
-        if (posicion !== undefined) {
-            dias[posicion].total += 1;
+        if (fecha <= limiteProximos) {
+            proximos += 1;
         }
     });
 
@@ -632,29 +720,29 @@ function renderizarAnalitica() {
         : (completadas === total
             ? 'Todo completado. ¡Buen trabajo!'
             : `${total - completadas} ${total - completadas === 1 ? 'tarea pendiente' : 'tareas pendientes'} por terminar`);
-    progresoRelleno.style.width = `${porcentaje}%`;
-    progresoBarra.setAttribute('aria-valuenow', String(porcentaje));
+    progresoAnillo.style.setProperty('--valor', `${porcentaje}%`);
+    progresoAnillo.setAttribute('aria-valuenow', String(porcentaje));
+    progresoAnillo.setAttribute('aria-valuetext', `${porcentaje} % completado`);
 
     metricaVencidas.textContent = String(vencidas);
     metricaHoy.textContent = String(paraHoy);
-    metricaProximos.textContent = String(dias.reduce((suma, dia) => suma + dia.total, 0));
+    metricaProximos.textContent = String(proximos);
     metricaSinFecha.textContent = String(sinFecha);
 
     totalPrioridad.textContent = textoTotal(total);
-    totalEstado.textContent = textoTotal(total);
     actualizarDistribucion('[data-distribucion="prioridad"]', prioridad, total);
-    actualizarDistribucion('[data-distribucion="estado"]', estado, total);
-    actualizarBarraApilada(estado, total);
 
-    renderizarCarga(dias);
+    renderizarSemana();
+    renderizarHoy();
 }
 
 /* ----------------------------------------------------------------------
    Render del dashboard
    ---------------------------------------------------------------------- */
 function renderizarProximas() {
+    const claveHoy = claveFecha(inicioDelDia());
     const proximas = tareas
-        .filter((tarea) => tarea.estado !== 'COMPLETADA')
+        .filter((tarea) => tarea.estado !== 'COMPLETADA' && tarea.fechaLimite !== claveHoy)
         .sort((a, b) => {
             if (a.fechaLimite && b.fechaLimite) {
                 return a.fechaLimite.localeCompare(b.fechaLimite);
@@ -674,12 +762,16 @@ function renderizarProximas() {
     if (proximas.length === 0) {
         listaProximas.hidden = true;
         vacioDashboard.hidden = false;
+        const hayPendientes = tareas.some((tarea) => tarea.estado !== 'COMPLETADA');
         if (tareas.length === 0) {
             tituloVacioDashboard.textContent = 'Todavía no hay tareas';
             textoVacioDashboard.textContent = 'Crea tu primera tarea y aparecerá aquí ordenada por fecha límite.';
-        } else {
+        } else if (!hayPendientes) {
             tituloVacioDashboard.textContent = 'Todo al día';
             textoVacioDashboard.textContent = 'No tienes tareas pendientes. Puedes revisar las completadas o crear una nueva.';
+        } else {
+            tituloVacioDashboard.textContent = 'Nada más pendiente';
+            textoVacioDashboard.textContent = 'Las tareas de hoy están en «Para hoy». Crea una nueva o revisa las completadas.';
         }
         return;
     }
@@ -1029,6 +1121,78 @@ rejillaTareas.addEventListener('click', (evento) => {
         abrirEditar(tarea);
     } else if (boton.dataset.accion === 'borrar') {
         abrirBorrar(tarea);
+    }
+});
+
+/* ----------------------------------------------------------------------
+   Completar una tarea desde el dashboard
+   ---------------------------------------------------------------------- */
+function datosParaCompletar(tarea) {
+    // Se reenvía la tarea completa: el PUT es una actualización completa y no
+    // debe perder descripción, prioridad ni fecha límite.
+    return {
+        titulo: tarea.titulo,
+        descripcion: tarea.descripcion,
+        prioridad: tarea.prioridad,
+        estado: 'COMPLETADA',
+        fechaLimite: tarea.fechaLimite
+    };
+}
+
+async function completarDesdeHoy(tarea, boton) {
+    if (completandoTarea !== null) {
+        return;
+    }
+
+    completandoTarea = tarea.id;
+    boton.disabled = true;
+    boton.setAttribute('aria-busy', 'true');
+    const textoBoton = boton.querySelector('.boton-completar-texto');
+    if (textoBoton) {
+        textoBoton.textContent = 'Completando…';
+    }
+
+    try {
+        const actualizada = await actualizarTarea(tarea.id, datosParaCompletar(tarea));
+        tareas = tareas.map((item) => (item.id === actualizada.id ? actualizada : item));
+        renderizarTodo();
+        mostrarToast(`«${tarea.titulo}» completada.`, 'exito');
+
+        if (vistaDesdeHash() === 'dashboard') {
+            requestAnimationFrame(() => {
+                const siguiente = listaHoy.querySelector('[data-completar]');
+                if (siguiente) {
+                    siguiente.focus({ preventScroll: true });
+                } else {
+                    document.getElementById('titulo-hoy').focus({ preventScroll: true });
+                }
+            });
+        }
+    } catch (fallo) {
+        if (fallo instanceof ErrorApi && fallo.estado === 404) {
+            mostrarToast('La tarea ya no existe. Se ha actualizado la lista.', 'error');
+            await cargarTareas({ silenciosa: true });
+        } else {
+            mostrarToast(`No se pudo completar la tarea. ${textoDeError(fallo)}`, 'error');
+            boton.disabled = false;
+            boton.removeAttribute('aria-busy');
+            if (textoBoton) {
+                textoBoton.textContent = 'Completar';
+            }
+        }
+    } finally {
+        completandoTarea = null;
+    }
+}
+
+listaHoy.addEventListener('click', (evento) => {
+    const boton = evento.target.closest('[data-completar]');
+    if (!boton) {
+        return;
+    }
+    const tarea = tareas.find((item) => item.id === Number(boton.dataset.id));
+    if (tarea) {
+        completarDesdeHoy(tarea, boton);
     }
 });
 

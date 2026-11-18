@@ -4,6 +4,7 @@ import com.taskflow.task.dto.TareaRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,9 @@ class TareaServiceTest {
     @Autowired
     private TareaRepository repositorio;
 
+    @Autowired
+    private JdbcTemplate jdbc;
+
     @Test
     void crearAsignaEstadoPendienteSiNoSeIndica() {
         Tarea creada = servicio.crear(peticion("Estudiar", "Tema 3", Prioridad.MEDIA, null, null));
@@ -38,6 +42,20 @@ class TareaServiceTest {
         Tarea creada = servicio.crear(peticion("Estudiar", null, Prioridad.ALTA, Estado.EN_PROCESO, null));
 
         assertThat(creada.getEstado()).isEqualTo(Estado.EN_PROCESO);
+    }
+
+    @Test
+    void crearUnaTareaPendienteNoRegistraFechaDeFinalizacion() {
+        Tarea creada = servicio.crear(peticion("Pendiente", null, Prioridad.MEDIA, null, null));
+
+        assertThat(creada.getCompletadoEn()).isNull();
+    }
+
+    @Test
+    void crearUnaTareaCompletadaRegistraFechaDeFinalizacion() {
+        Tarea creada = servicio.crear(peticion("Hecha", null, Prioridad.MEDIA, Estado.COMPLETADA, null));
+
+        assertThat(creada.getCompletadoEn()).isNotNull();
     }
 
     @Test
@@ -71,6 +89,50 @@ class TareaServiceTest {
                 peticion("Tarea", null, Prioridad.MEDIA, Estado.COMPLETADA, null));
 
         assertThat(actualizada.getEstado()).isEqualTo(Estado.COMPLETADA);
+        assertThat(actualizada.getCompletadoEn()).isNotNull();
+    }
+
+    @Test
+    void editarUnaTareaCompletadaConservaSuFechaDeFinalizacion() {
+        Tarea creada = servicio.crear(peticion("Tarea", null, Prioridad.MEDIA, Estado.PENDIENTE, null));
+        Tarea completada = servicio.actualizar(creada.getId(),
+                peticion("Tarea", null, Prioridad.MEDIA, Estado.COMPLETADA, null));
+        var completadoEn = completada.getCompletadoEn();
+
+        Tarea editada = servicio.actualizar(creada.getId(),
+                peticion("Tarea editada", null, Prioridad.ALTA, Estado.COMPLETADA, null));
+
+        assertThat(editada.getCompletadoEn()).isEqualTo(completadoEn);
+    }
+
+    @Test
+    void reabrirUnaTareaLimpiaSuFechaDeFinalizacion() {
+        Tarea creada = servicio.crear(peticion("Tarea", null, Prioridad.MEDIA, Estado.PENDIENTE, null));
+        servicio.actualizar(creada.getId(),
+                peticion("Tarea", null, Prioridad.MEDIA, Estado.COMPLETADA, null));
+
+        Tarea reabierta = servicio.actualizar(creada.getId(),
+                peticion("Tarea", null, Prioridad.MEDIA, Estado.EN_PROCESO, null));
+
+        assertThat(reabierta.getCompletadoEn()).isNull();
+    }
+
+    @Test
+    void unaTareaAntiguaCompletadaNoRecibeUnaFechaInventada() {
+        jdbc.update("""
+                INSERT INTO tareas (titulo, prioridad, estado, creado_en, actualizado_en)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """, "Tarea anterior", "MEDIA", "COMPLETADA");
+        Long id = jdbc.queryForObject(
+                "SELECT id FROM tareas WHERE titulo = ?", Long.class, "Tarea anterior");
+
+        Tarea antigua = servicio.obtener(id);
+        assertThat(antigua.getCompletadoEn()).isNull();
+
+        Tarea editada = servicio.actualizar(id,
+                peticion("Tarea anterior editada", null, Prioridad.MEDIA, Estado.COMPLETADA, null));
+
+        assertThat(editada.getCompletadoEn()).isNull();
     }
 
     @Test

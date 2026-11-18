@@ -3,7 +3,10 @@
 Esta guía explica cómo está construida la interfaz de VPlan. El diseño y la
 estructura nacieron en la Fase 5; desde la Fase 6 la interfaz **lee y escribe
 datos reales** en MySQL a través de `/api/tareas`. La Fase 7 amplía el dashboard
-con analíticas calculadas en el navegador y añade el **tema claro/oscuro**.
+con analíticas calculadas en el navegador y añade el **tema claro/oscuro**. La
+revisión visual posterior adopta una estética **cyberpunk retro y elegante**:
+cian, morado y magenta sobre azul noche, retícula sutil y brillos contenidos,
+sin animaciones constantes.
 
 ## 1. Archivos
 
@@ -19,7 +22,10 @@ src/main/resources/static/
 ```
 
 No hay frameworks, ni fuentes descargadas, ni peticiones a servicios externos.
-Spring Boot sirve estos archivos en la raíz: `http://localhost:8080/`.
+Spring Boot sirve estos archivos en la raíz: `http://localhost:8080/`. Los
+recursos se envían con `Cache-Control: no-cache` para que, tras actualizar la
+interfaz, el navegador revalide en lugar de mostrar una versión antigua de la
+caché (si el archivo no cambió, responde `304` y sigue siendo instantáneo).
 
 El HTML carga el CSS en el `<head>`, un pequeño script inline para aplicar el tema
 antes del primer pintado y dos módulos:
@@ -52,8 +58,9 @@ body
 ├─ div#zona-avisos              Avisos (toasts) accesibles
 ├─ dialog#dialogo-tarea         Formulario de crear/editar
 ├─ dialog#dialogo-borrar        Confirmación de borrado
-└─ template#plantilla-tarea     Modelo de tarjeta
-└─ template#plantilla-proxima   Modelo de fila del dashboard
+├─ template#plantilla-tarea     Modelo de tarjeta
+├─ template#plantilla-proxima   Modelo de fila de «Siguientes tareas»
+└─ template#plantilla-hoy       Modelo de fila de «Para hoy»
 ```
 
 Solo hay **una página HTML**. Las dos vistas son secciones que se muestran u
@@ -71,20 +78,23 @@ Todos los colores están en variables CSS dentro de `:root`:
 
 ```css
 :root {
-    --fondo: #f5f6fa;
+    --fondo: #f3f6fb;
     --superficie: #ffffff;
-    --texto: #171b26;
-    --primario: #4f6ef7;
-    --primario-fuerte: #3f5ce0;
-    --alta: #c9353b;
+    --texto: #101827;
+    --primario: #35d6e8;
+    --primario-fuerte: #12afc4;
+    --secundario: #9b72cf;
+    --magenta: #e45b9a;
+    --alta: #c02d6c;
     ...
 }
 ```
 
-Se usan dos azules por un motivo de accesibilidad: `#4f6ef7` es el color de marca
-(iconos, focos, detalles) y `#3f5ce0` es el que se usa como fondo de botones y
-chips con texto blanco. El primero no llega a 4.5:1 de contraste con blanco; el
-segundo sí. Así el diseño mantiene el azul elegido sin sacrificar legibilidad.
+La identidad combina **cian, morado y magenta** con un fondo azul noche en el
+tema oscuro. En el tema claro los mismos acentos se oscurecen lo necesario para
+mantener el contraste. Los botones principales usan cian con texto oscuro
+(`--sobre-primario`): el cian puro no tiene contraste suficiente con blanco, así
+que se evita ese error en lugar de renunciar al color de marca.
 
 ### Tema claro y oscuro
 
@@ -125,9 +135,11 @@ de 4.5:1 (WCAG AA).
 
 ### Superficies
 
-- Fondo general gris muy claro; tarjetas blancas con borde suave y sombra mínima.
+- Fondo general con una retícula apenas visible y dos halos de color; en oscuro,
+  azul noche con retícula cian muy tenue.
+- Tarjetas con borde suave, brillo diagonal contenido y sombra mínima.
 - Radio grande en las tarjetas (18 px) y pequeño en los controles (10 px).
-- El azul se reserva para lo accionable y lo seleccionado: si todo destaca, nada
+- El cian se reserva para lo accionable y lo seleccionado: si todo destaca, nada
   destaca.
 
 ## 4. Layout responsive
@@ -135,10 +147,14 @@ de 4.5:1 (WCAG AA).
 | Ancho | Menú | Estadísticas | Analíticas | Tareas |
 |---|---|---|---|---|
 | ≥ 1200 px | Fijo a la izquierda | 3 columnas | 2 columnas | 2 columnas |
-| 900–1199 px | Fijo a la izquierda | 3 columnas | 2 columnas | 1 columna |
-| 781–899 px | Cajón con fondo oscuro | 3 columnas | 2 columnas | 1 columna |
-| 641–780 px | Cajón con fondo oscuro | 3 columnas | 1 columna | 1 columna |
+| 1024–1199 px | Fijo a la izquierda | 3 columnas | 2 columnas | 1 columna |
+| 900–1023 px | Fijo a la izquierda | 3 columnas | 1 columna | 1 columna |
+| 641–899 px | Cajón con fondo oscuro | 3 columnas | 1 columna | 1 columna |
 | ≤ 640 px | Cajón con fondo oscuro | 1 columna | 1 columna | 1 columna |
+
+En el gráfico semanal, las siete columnas se reparten el ancho disponible y
+mantienen su altura; en pantallas estrechas se reduce el hueco y el tamaño de
+las etiquetas, sin scroll horizontal.
 
 El contenido tiene un ancho máximo de 1240 px y se centra en pantallas grandes.
 La barra superior usa `position: sticky`: al hacer scroll se queda arriba con un
@@ -203,8 +219,10 @@ Después:
 
 - Calcula los contadores de pendientes, en proceso y completadas.
 - Calcula las analíticas del dashboard sobre esa misma lista.
-- Pinta hasta 5 tareas no completadas ordenadas por fecha límite (las que no
-  tienen fecha van al final).
+- Pinta las tareas que vencen **hoy**, ordenadas por prioridad, con un botón para
+  completarlas sin abrir el formulario.
+- Pinta hasta 5 tareas pendientes que **no vencen hoy**, ordenadas por fecha
+  límite (las que no tienen fecha van al final).
 - Pinta la rejilla completa de "Mis tareas".
 
 ### Analíticas del dashboard
@@ -214,29 +232,48 @@ cargada, así que sigue habiendo **una sola petición `GET /api/tareas`** por ca
 
 | Bloque | Qué muestra | Qué tareas cuenta |
 |---|---|---|
-| Progreso general | Porcentaje, completadas de total y pendientes | Todas |
+| Progreso general | Anillo con porcentaje, completadas de total y pendientes | Todas |
 | Vencidas | Fecha límite anterior a hoy | Sin completar |
-| Para hoy | Fecha límite igual a hoy | Sin completar |
+| Para hoy (métrica) | Fecha límite igual a hoy | Sin completar |
 | Próximos 7 días | De mañana a hoy + 7 | Sin completar |
 | Sin fecha | Sin fecha límite | Sin completar |
 | Prioridad | Cantidad y porcentaje por prioridad | Todas |
-| Estado | Cantidad, porcentaje y barra apilada por estado | Todas |
-| Carga semanal | 7 columnas, de mañana a hoy + 7 | Sin completar con fecha |
-| Próximas tareas | Hasta 5 tareas ordenadas por fecha | Sin completar |
+| Para hoy (lista) | Tareas del día con prioridad y acción de completar | Sin completar con fecha de hoy |
+| Completadas · 7 días | Barras por día, de hoy − 6 a hoy | Completadas con `completadoEn` |
+| Siguientes tareas | Hasta 5 tareas ordenadas por fecha | Sin completar y sin vencer hoy |
 
-Las fechas se comparan como locales a medianoche, sin pasar por UTC. Los cálculos
-se repiten después de cada alta, edición o borrado porque la lista se vuelve a leer
-del servidor. Mientras carga se muestran guiones y, si falla la petición, "No
-disponible"; nunca cifras inventadas.
+La tarjeta de estado se retiró porque repetía los tres contadores superiores. El
+gráfico de carga futura se sustituyó por el de **tareas completadas**, que aporta
+información nueva y no duplica los vencimientos.
+
+Las fechas límite se comparan como locales a medianoche, sin pasar por UTC. Para
+la fecha de finalización, la API entrega un instante UTC y el navegador lo agrupa
+por el **día local** de la persona. Las tareas antiguas completadas antes de la
+migración `V3` tienen `completadoEn = null`: no se colocan en un día inventado y
+el panel lo explica cuando ocurre.
+
+Los cálculos se repiten después de cada alta, edición, finalización o borrado
+porque la lista se vuelve a leer del servidor. Mientras carga se muestran guiones
+y, si falla la petición, "No disponible"; nunca cifras inventadas.
 
 Cada tarjeta se clona desde `#plantilla-tarea` y se rellena con `textContent`.
 Las clases de prioridad y estado salen de mapas controlados, no del texto que
 llega de la API. Si una tarea contiene algo parecido a HTML, se muestra como
 texto: no se ejecuta.
 
-Las fechas se parsean como locales (`new Date(anio, mes - 1, dia)`) para evitar
-el clásico error de un día por UTC. Las fechas vencidas se marcan en rojo y con
-`title="Fecha límite superada"`.
+Las fechas límite se parsean como locales (`new Date(anio, mes - 1, dia)`) para
+evitar el clásico error de un día por UTC. Las fechas vencidas se marcan en rojo
+y con `title="Fecha límite superada"`. `completadoEn` sí se interpreta como
+instante (`new Date(iso)`), porque el servidor ya lo envía en UTC.
+
+### Completar desde el dashboard
+
+El botón «Completar» de una tarea de hoy reutiliza `PUT /api/tareas/{id}` con el
+resto de campos de la tarea y `estado: "COMPLETADA"`. No hay un endpoint nuevo ni
+lógica duplicada: el servidor registra `completadoEn`, el array local se
+actualiza con la respuesta, se repintan estadísticas, lista y gráfico, y se
+muestra un aviso. Si la tarea ya no existe, se recarga la lista. Mientras la
+petición está en curso el botón queda deshabilitado y anuncia `aria-busy`.
 
 ## 8. Diálogos y operaciones reales
 
@@ -328,12 +365,13 @@ interno del servidor se muestra con un texto genérico, sin trazas.
 - **`prefers-reduced-motion`**: desactiva animaciones y transiciones, incluido el
   cambio de tema.
 - **`aria-expanded`** en el botón del menú y `aria-controls` apuntando al panel.
-- **Gráficos** con texto alternativo: cada columna de carga semanal lleva su
-  cantidad y una etiqueta para lectores de pantalla.
+- **Gráficos** con texto alternativo: cada columna semanal lleva su cantidad y
+  una descripción con el día completo para lectores de pantalla. El anillo de
+  progreso usa `role="progressbar"` con `aria-valuenow` y `aria-valuetext`.
 
 ## 12. Rendimiento
 
-- Sin frameworks: HTML, CSS, JS y el icono suman unos 114 KB sin comprimir.
+- Sin frameworks: HTML, CSS, JS y el icono suman unos 127 KB sin comprimir.
 - Sin fuentes ni imágenes externas: cero peticiones a terceros.
 - Iconos en un sprite SVG embebido: se reutilizan sin descargas adicionales.
 - Animaciones de `opacity`, `transform` y colores; los gráficos solo animan
@@ -345,7 +383,7 @@ interno del servidor se muestra con un texto genérico, sin trazas.
 
 | Fase | Qué añade al frontend |
 |---|---|
-| 7. Dashboard y modo oscuro | Analíticas de progreso, vencimientos, distribuciones y carga semanal; tema claro/oscuro persistido |
+| 7. Dashboard y modo oscuro | Analíticas de progreso, vencimientos, distribución por prioridad, tareas de hoy y completadas de la semana; tema claro/oscuro persistido |
 | 8. Pruebas | Repaso de flujos, responsive, accesibilidad y rendimiento |
 | 9. Documentación | Capturas definitivas y README de portfolio |
 
@@ -356,6 +394,8 @@ interno del servidor se muestra con un texto genérico, sin trazas.
 - Contadores y analíticas se calculan en el navegador con la lista completa; con
   miles de tareas convendría un endpoint agregado en el servidor.
 - La preferencia de tema es local al navegador: no viaja entre equipos.
+- El gráfico semanal no puede reconstruir tareas completadas antes de `V3`: se
+  excluyen y se avisa en el propio panel en lugar de inventar fechas.
 - Si JavaScript está desactivado, no se cargan datos ni funcionan menú y
   diálogos. Es aceptable en una aplicación local que depende de JS para hablar
   con la API.

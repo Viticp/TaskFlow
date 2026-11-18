@@ -7,15 +7,15 @@
      3. Menú lateral
      4. Barra superior y contenido
      5. Cabeceras de vista
-     6. Tarjetas de estadística
+     6. Tarjetas de estadística y analíticas
      7. Lista compacta del dashboard
      8. Filtros
      9. Tarjetas de tarea
     10. Componentes (pastillas, botones, estado vacío)
     11. Diálogos y formularios
     12. Responsive
-   Los colores son variables CSS: la Fase 7 añadirá el tema oscuro
-   redefiniéndolas, sin tocar el resto de la hoja.
+   Los colores son variables CSS: el tema oscuro solo redefine sus valores,
+   sin duplicar componentes.
    ========================================================================== */
 
 /* 1. Tokens de diseño ------------------------------------------------------ */
@@ -23,106 +23,138 @@
     color-scheme: light;
 
     /* Superficies y texto */
-    --fondo: #f5f6fa;
+    --fondo: #f3f6fb;
     --superficie: #ffffff;
-    --superficie-2: #fafbfe;
-    --borde: #e5e8f0;
-    --borde-fuerte: #d2d8e6;
-    --texto: #171b26;
-    --texto-suave: #5b6478;
-    --texto-tenue: #69718a;
+    --superficie-2: #f7fafe;
+    --borde: #dce5f1;
+    --borde-fuerte: #bfcde0;
+    --texto: #101827;
+    --texto-suave: #4f5e74;
+    --texto-tenue: #6b7a91;
 
-    /* Marca */
-    --primario: #4f6ef7;
-    --primario-fuerte: #3f5ce0;
-    --primario-hover: #334dc4;
-    --primario-suave: #eef1ff;
-    --primario-borde: #ccd6ff;
-    --primario-texto: #3f5ce0;
-    --foco: #93a5ff;
-    --foco-anillo: rgb(79 110 247 / 16%);
+    /* Marca: cian, morado y magenta sobre azul noche */
+    --primario: #35d6e8;
+    --primario-fuerte: #12afc4;
+    --primario-hover: #0a90a3;
+    --primario-suave: #e3fafd;
+    --primario-borde: #a7e9f1;
+    --primario-texto: #076c7a;
+    --secundario: #9b72cf;
+    --secundario-fuerte: #7c4fb5;
+    --secundario-suave: #f2eafb;
+    --secundario-borde: #dccbef;
+    --magenta: #e45b9a;
+    --magenta-fuerte: #c23375;
+    --magenta-suave: #fdebf3;
+    --magenta-borde: #f5c2d7;
+    --foco: #0c93a5;
+    --foco-anillo: rgb(53 214 232 / 26%);
+    --sobre-primario: #04121a;
+    --sombra-primario: 0 6px 18px rgb(18 175 196 / 24%);
 
     /* Prioridad */
-    --alta: #c9353b;
-    --alta-fondo: #fdeff0;
-    --alta-borde: #f3c9cb;
-    --media: #965a00;
-    --media-fondo: #fdf4e6;
-    --baja: #1c7350;
-    --baja-fondo: #ecf7f1;
-    --exito-borde: #c6e6d7;
+    --alta: #c02d6c;
+    --alta-fondo: #fce9f1;
+    --alta-borde: #f3bdd3;
+    --media: #6d4aa5;
+    --media-fondo: #f1eaf9;
+    --baja: #087e8b;
+    --baja-fondo: #e2f9fb;
+    --exito-borde: #b3e9ef;
 
     /* Estado */
-    --pendiente: #5b6478;
-    --pendiente-fondo: #f1f3f8;
-    --en-proceso: #2b58c4;
-    --en-proceso-fondo: #eef2fe;
-    --completada: #1c7350;
-    --completada-fondo: #ecf7f1;
+    --pendiente: #53627a;
+    --pendiente-fondo: #eef2f8;
+    --en-proceso: #7c4fb5;
+    --en-proceso-fondo: #f2eafb;
+    --completada: #087e8b;
+    --completada-fondo: #e2f9fb;
 
     /* Acciones destructivas */
-    --peligro: #c9353b;
-    --peligro-hover: #a92429;
-    --peligro-anillo: rgb(201 53 59 / 12%);
+    --peligro: #c23375;
+    --peligro-hover: #a82660;
+    --peligro-anillo: rgb(194 51 117 / 16%);
 
-    /* Formas y sombras */
+    /* Formas, sombras y textura */
     --radio: 14px;
     --radio-g: 18px;
     --radio-p: 10px;
-    --sombra-1: 0 1px 2px rgb(17 24 39 / 4%), 0 1px 3px rgb(17 24 39 / 4%);
-    --sombra-2: 0 12px 30px rgb(20 30 60 / 9%);
-    --barra-fondo: rgb(245 246 250 / 82%);
+    --sombra-1: 0 1px 2px rgb(16 24 40 / 4%), 0 10px 28px rgb(16 24 40 / 5%);
+    --sombra-2: 0 22px 54px rgb(16 24 40 / 13%);
+    --barra-fondo: rgb(243 246 251 / 82%);
+    --anillo-fondo: #e7eef7;
+    --panel-brillo: linear-gradient(160deg, rgb(255 255 255 / 92%), rgb(255 255 255 / 0%) 48%);
+    --brillo-1: rgb(53 214 232 / 10%);
+    --brillo-2: rgb(155 114 207 / 9%);
+    --rejilla: rgb(16 24 40 / 3%);
+    --rejilla-tamano: 52px;
+    --fuente-mono: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
     /* Medidas del layout */
     --lateral: 264px;
     --altura-barra: 72px;
 }
 
-/* Tema oscuro: mismas variables, otros valores. El resto de la hoja no cambia. */
+/* Tema oscuro: la paleta cyberpunk de referencia. */
 :root[data-theme="oscuro"] {
     color-scheme: dark;
 
-    --fondo: #0f1420;
-    --superficie: #171e2e;
-    --superficie-2: #1c2436;
-    --borde: #2a3448;
-    --borde-fuerte: #3a4762;
-    --texto: #e8ecf5;
-    --texto-suave: #a7b1c6;
-    --texto-tenue: #8b96ac;
+    --fondo: #0b0f19;
+    --superficie: #141b2b;
+    --superficie-2: #192235;
+    --borde: #263149;
+    --borde-fuerte: #35425d;
+    --texto: #e8edf5;
+    --texto-suave: #929db2;
+    --texto-tenue: #74829a;
 
-    --primario: #7d93ff;
-    --primario-fuerte: #4666e8;
-    --primario-hover: #3a56cc;
-    --primario-suave: #1e2740;
-    --primario-borde: #33427a;
-    --primario-texto: #a9baff;
-    --foco: #93a5ff;
-    --foco-anillo: rgb(125 147 255 / 26%);
+    --primario: #35d6e8;
+    --primario-fuerte: #23c2d6;
+    --primario-hover: #4be4f4;
+    --primario-suave: #102a33;
+    --primario-borde: #1d4a55;
+    --primario-texto: #6fe7f2;
+    --secundario: #9b72cf;
+    --secundario-fuerte: #b18bdf;
+    --secundario-suave: #251b36;
+    --secundario-borde: #3d2a58;
+    --magenta: #e45b9a;
+    --magenta-fuerte: #f06ba8;
+    --magenta-suave: #321a28;
+    --magenta-borde: #552b40;
+    --foco: #35d6e8;
+    --foco-anillo: rgb(53 214 232 / 30%);
+    --sobre-primario: #04121a;
+    --sombra-primario: 0 8px 24px rgb(53 214 232 / 18%);
 
-    --alta: #ff8a8f;
-    --alta-fondo: #2b1a20;
-    --alta-borde: #4a2a32;
-    --media: #f0b45c;
-    --media-fondo: #2a2317;
-    --baja: #6fd3a8;
-    --baja-fondo: #122a24;
-    --exito-borde: #24443a;
+    --alta: #ff8fbe;
+    --alta-fondo: #331b28;
+    --alta-borde: #5a2c43;
+    --media: #c3a2f0;
+    --media-fondo: #271f36;
+    --baja: #67e4f1;
+    --baja-fondo: #0f2b31;
+    --exito-borde: #1f4a53;
 
-    --pendiente: #aab4c8;
-    --pendiente-fondo: #222a3a;
-    --en-proceso: #9db0ff;
-    --en-proceso-fondo: #1c2647;
-    --completada: #6fd3a8;
-    --completada-fondo: #122a24;
+    --pendiente: #aab6c9;
+    --pendiente-fondo: #1e2738;
+    --en-proceso: #c3a2f0;
+    --en-proceso-fondo: #271f36;
+    --completada: #67e4f1;
+    --completada-fondo: #0f2b31;
 
-    --peligro: #cf3f45;
-    --peligro-hover: #b83238;
-    --peligro-anillo: rgb(255 123 129 / 22%);
+    --peligro: #c23375;
+    --peligro-hover: #a82660;
+    --peligro-anillo: rgb(228 91 154 / 22%);
 
-    --sombra-1: 0 1px 2px rgb(0 0 0 / 40%), 0 1px 3px rgb(0 0 0 / 30%);
-    --sombra-2: 0 18px 40px rgb(0 0 0 / 55%);
-    --barra-fondo: rgb(15 20 32 / 84%);
+    --sombra-1: 0 1px 0 rgb(255 255 255 / 3%), 0 16px 34px rgb(0 0 0 / 28%);
+    --sombra-2: 0 26px 64px rgb(0 0 0 / 55%);
+    --barra-fondo: rgb(11 15 25 / 84%);
+    --anillo-fondo: #1b2537;
+    --panel-brillo: linear-gradient(160deg, rgb(255 255 255 / 5%), rgb(255 255 255 / 0%) 48%);
+    --brillo-1: rgb(53 214 232 / 13%);
+    --brillo-2: rgb(155 114 207 / 12%);
+    --rejilla: rgb(53 214 232 / 4%);
 }
 
 /* 2. Reset mínimo y base --------------------------------------------------- */
@@ -137,8 +169,20 @@ html {
 }
 
 body {
+    min-height: 100vh;
     margin: 0;
-    background: var(--fondo);
+    background-color: var(--fondo);
+    background-image:
+        radial-gradient(1100px 540px at 88% -12%, var(--brillo-1), transparent 64%),
+        radial-gradient(900px 500px at -10% 6%, var(--brillo-2), transparent 62%),
+        linear-gradient(var(--rejilla) 1px, transparent 1px),
+        linear-gradient(90deg, var(--rejilla) 1px, transparent 1px);
+    background-size:
+        auto,
+        auto,
+        var(--rejilla-tamano) var(--rejilla-tamano),
+        var(--rejilla-tamano) var(--rejilla-tamano);
+    background-attachment: fixed;
     color: var(--texto);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 1rem;
@@ -228,9 +272,9 @@ svg {
     z-index: 100;
     padding: 10px 16px;
     border-radius: var(--radio-p);
-    background: var(--primario-fuerte);
-    color: #fff;
-    font-weight: 600;
+    background: var(--primario);
+    color: var(--sobre-primario);
+    font-weight: 650;
     transform: translateY(-160%);
     transition: transform 160ms ease;
 }
@@ -250,7 +294,8 @@ svg {
     gap: 26px;
     width: var(--lateral);
     padding: 26px 18px 22px;
-    background: var(--superficie);
+    background-color: var(--superficie);
+    background-image: linear-gradient(180deg, var(--superficie), var(--superficie-2));
     border-right: 1px solid var(--borde);
     overflow-y: auto;
 }
@@ -268,9 +313,9 @@ svg {
     width: 34px;
     height: 34px;
     border-radius: 10px;
-    background: var(--primario-fuerte);
-    color: #fff;
-    box-shadow: 0 4px 10px rgb(63 92 224 / 28%);
+    background: linear-gradient(135deg, var(--primario), var(--secundario));
+    color: var(--sobre-primario);
+    box-shadow: var(--sombra-primario);
 }
 
 .marca-icono svg {
@@ -286,7 +331,7 @@ svg {
 .marca-nombre {
     font-size: 1.12rem;
     font-weight: 700;
-    letter-spacing: -0.015em;
+    letter-spacing: 0.015em;
 }
 
 .menu-nav {
@@ -301,22 +346,25 @@ svg {
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
+    border: 1px solid transparent;
     border-radius: var(--radio-p);
     color: var(--texto-suave);
     font-size: 0.95rem;
     font-weight: 500;
     text-decoration: none;
-    transition: background 150ms ease, color 150ms ease;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
 .menu-enlace:hover {
     background: var(--superficie-2);
+    border-color: var(--borde);
     color: var(--texto);
     text-decoration: none;
 }
 
 .menu-enlace[aria-current="page"] {
     background: var(--primario-suave);
+    border-color: var(--primario-borde);
     color: var(--primario-texto);
     font-weight: 600;
 }
@@ -324,12 +372,12 @@ svg {
 .menu-enlace[aria-current="page"]::before {
     content: "";
     position: absolute;
-    left: 0;
+    left: -1px;
     top: 50%;
     width: 3px;
     height: 18px;
     border-radius: 3px;
-    background: var(--primario-fuerte);
+    background: linear-gradient(180deg, var(--primario), var(--secundario));
     transform: translateY(-50%);
 }
 
@@ -387,8 +435,11 @@ svg {
 
 .fecha-hoy {
     color: var(--texto-suave);
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-family: var(--fuente-mono);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 .usuario {
@@ -406,7 +457,7 @@ svg {
     height: 34px;
     border: 1px solid var(--primario-borde);
     border-radius: 50%;
-    background: var(--primario-suave);
+    background: linear-gradient(135deg, var(--primario-suave), var(--secundario-suave));
     color: var(--primario-texto);
     font-size: 0.9rem;
     font-weight: 700;
@@ -466,7 +517,7 @@ svg {
 }
 
 .cambiador-icono--sol {
-    color: var(--media);
+    color: var(--magenta);
 }
 
 .cambiador-icono--luna {
@@ -559,6 +610,16 @@ svg {
     letter-spacing: -0.025em;
 }
 
+.sobre-titulo {
+    margin-bottom: 6px;
+    color: var(--primario-texto);
+    font-family: var(--fuente-mono);
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
 .subtitulo {
     margin-top: 6px;
     color: var(--texto-suave);
@@ -582,11 +643,37 @@ svg {
 }
 
 .tarjeta-estadistica {
+    position: relative;
+    overflow: hidden;
     padding: 20px 22px;
-    background: var(--superficie);
+    background-color: var(--superficie);
+    background-image: var(--panel-brillo);
     border: 1px solid var(--borde);
     border-radius: var(--radio-g);
     box-shadow: var(--sombra-1);
+}
+
+.tarjeta-estadistica::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--secundario), transparent 72%);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.tarjeta-estadistica--proceso::after {
+    background: linear-gradient(90deg, var(--primario), transparent 72%);
+}
+
+.tarjeta-estadistica--completada::after {
+    background: linear-gradient(90deg, var(--magenta), transparent 72%);
+}
+
+.tarjeta-estadistica--pendiente .estadistica-icono {
+    background: var(--secundario-suave);
+    color: var(--secundario-fuerte);
 }
 
 .estadistica-icono {
@@ -649,12 +736,23 @@ svg {
     margin-bottom: 16px;
 }
 
+.rejilla-analitica--resumen {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+}
+
+.rejilla-analitica--foco {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+}
+
 .bloque.bloque--analitica {
     padding-bottom: 18px;
 }
 
-.bloque.bloque--carga {
-    margin-bottom: 16px;
+.bloque--hoy,
+.bloque--semana {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 16px;
 }
 
 .analitica-nota {
@@ -670,7 +768,8 @@ svg {
     border-radius: 999px;
     background: var(--superficie-2);
     color: var(--texto-suave);
-    font-size: 0.72rem;
+    font-family: var(--fuente-mono);
+    font-size: 0.7rem;
     font-weight: 650;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -683,42 +782,84 @@ svg {
     text-align: center;
 }
 
-/* Progreso general */
+/* Progreso general: anillo con el porcentaje en el centro. */
 .progreso {
     display: flex;
-    align-items: flex-end;
-    gap: 14px;
-    margin: 6px 0 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    margin-top: 12px;
+}
+
+.progreso-anillo {
+    --valor: 0%;
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from -90deg,
+        var(--primario) 0,
+        var(--secundario) var(--valor),
+        var(--anillo-fondo) var(--valor)
+    );
+    transition: background 420ms ease;
+}
+
+.progreso-anillo::before {
+    content: "";
+    position: absolute;
+    inset: 11px;
+    border: 1px solid var(--borde);
+    border-radius: 50%;
+    background: var(--superficie);
+}
+
+.progreso-contenido {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    line-height: 1;
 }
 
 .progreso-porcentaje {
-    font-size: clamp(2rem, 4vw, 2.6rem);
+    font-size: 1.55rem;
     font-weight: 700;
-    line-height: 1;
     letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
 }
 
+.progreso-unidad {
+    color: var(--texto-tenue);
+    font-family: var(--fuente-mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.progreso-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1 1 180px;
+}
+
 .progreso-detalle {
-    padding-bottom: 3px;
-    color: var(--texto-suave);
-    font-size: 0.9rem;
+    color: var(--texto);
+    font-size: 0.92rem;
+    font-weight: 600;
 }
 
-.progreso-pista {
-    height: 10px;
-    border-radius: 999px;
-    background: var(--pendiente-fondo);
-    overflow: hidden;
-}
-
-.progreso-relleno {
-    display: block;
-    width: 0;
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, var(--primario-fuerte), var(--primario));
-    transition: width 420ms ease;
+.progreso-nota {
+    color: var(--texto-tenue);
+    font-size: 0.8rem;
 }
 
 /* Vencimientos */
@@ -768,7 +909,7 @@ svg {
     color: var(--texto-tenue);
 }
 
-/* Distribuciones por prioridad y estado */
+/* Distribución por prioridad */
 .distribucion {
     display: flex;
     flex-direction: column;
@@ -815,21 +956,6 @@ svg {
     background: var(--baja);
 }
 
-.distribucion-punto--pendiente,
-.distribucion-relleno--pendiente {
-    background: var(--pendiente);
-}
-
-.distribucion-punto--proceso,
-.distribucion-relleno--proceso {
-    background: var(--en-proceso);
-}
-
-.distribucion-punto--completada,
-.distribucion-relleno--completada {
-    background: var(--completada);
-}
-
 .distribucion-pista {
     height: 8px;
     border-radius: 999px;
@@ -865,43 +991,81 @@ svg {
     text-align: right;
 }
 
-.barra-apilada {
+/* Para hoy: tareas con fecha límite del día. */
+.lista-hoy {
     display: flex;
-    height: 12px;
-    margin-top: 14px;
-    border-radius: 999px;
-    background: var(--pendiente-fondo);
-    overflow: hidden;
+    flex-direction: column;
+    margin-top: 4px;
 }
 
-.barra-apilada-segmento {
-    width: 0;
-    height: 100%;
-    transition: width 420ms ease;
+.fila-hoy {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 2px;
+    border-top: 1px solid var(--borde);
 }
 
-.barra-apilada--pendiente {
-    background: var(--pendiente);
+.fila-hoy:first-child {
+    border-top: 0;
+    padding-top: 2px;
 }
 
-.barra-apilada--proceso {
-    background: var(--en-proceso);
+.fila-hoy-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
 }
 
-.barra-apilada--completada {
-    background: var(--completada);
+.fila-hoy-titulo {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
-/* Carga de los próximos 7 días */
-.carga-grafico {
+.fila-hoy-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.boton-completar {
+    flex: none;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--borde-fuerte);
+    background: var(--superficie-2);
+    color: var(--texto);
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.boton-completar:hover {
+    background: var(--primario-suave);
+    border-color: var(--primario-borde);
+    color: var(--primario-texto);
+    filter: none;
+}
+
+.boton-completar .icono {
+    width: 16px;
+    height: 16px;
+}
+
+/* Completadas de los últimos siete días. */
+.grafico-barras {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     align-items: end;
-    gap: 10px;
-    margin-top: 18px;
+    gap: 8px;
+    margin-top: 10px;
 }
 
-.carga-dia {
+.grafico-dia {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -909,54 +1073,87 @@ svg {
     min-width: 0;
 }
 
-.carga-cantidad {
-    font-size: 0.88rem;
-    font-weight: 700;
+.grafico-cantidad {
+    color: var(--texto-suave);
+    font-family: var(--fuente-mono);
+    font-size: 0.76rem;
+    font-weight: 650;
     font-variant-numeric: tabular-nums;
 }
 
-.carga-pista {
+.grafico-pista {
     display: flex;
     align-items: flex-end;
     width: 100%;
     height: 96px;
-    padding: 4px;
+    padding: 3px;
     border: 1px solid var(--borde);
-    border-radius: 9px;
+    border-radius: 8px;
     background: var(--superficie-2);
 }
 
-.carga-relleno {
+.grafico-relleno {
     width: 100%;
-    height: 0;
-    border-radius: 6px;
-    background: linear-gradient(180deg, var(--primario), var(--primario-fuerte));
-    transition: height 460ms ease;
+    min-height: 2px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, var(--primario), var(--secundario));
+    transition: height 420ms ease;
 }
 
-.carga-etiqueta {
+.grafico-relleno--cero {
+    background: var(--borde);
+}
+
+.grafico-dia--hoy .grafico-pista {
+    border-color: var(--primario-borde);
+    box-shadow: inset 0 0 0 1px var(--foco-anillo);
+}
+
+.grafico-etiqueta {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: var(--texto-suave);
-    font-size: 0.72rem;
+    color: var(--texto-tenue);
+    font-size: 0.7rem;
     line-height: 1.25;
+}
+
+.grafico-dia-semana {
     text-transform: capitalize;
 }
 
-.carga-dia-numero {
+.grafico-dia-numero {
     color: var(--texto);
     font-size: 0.8rem;
     font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+.grafico-dia--hoy .grafico-dia-semana,
+.grafico-dia--hoy .grafico-dia-numero {
+    color: var(--primario-texto);
 }
 
 /* 7. Lista compacta del dashboard ----------------------------------------- */
 .bloque {
-    padding: 18px 20px 8px;
-    background: var(--superficie);
+    position: relative;
+    overflow: hidden;
+    padding: 20px 22px 10px;
+    background-color: var(--superficie);
+    background-image: var(--panel-brillo);
     border: 1px solid var(--borde);
     border-radius: var(--radio-g);
     box-shadow: var(--sombra-1);
+}
+
+.bloque::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primario-borde) 45%, transparent);
+    opacity: 0.9;
+    pointer-events: none;
 }
 
 .bloque-cabecera {
@@ -1074,16 +1271,16 @@ svg {
 }
 
 .chip[aria-pressed="true"] {
-    background: var(--primario-fuerte);
-    border-color: var(--primario-fuerte);
-    color: #fff;
-    font-weight: 600;
+    background: var(--primario);
+    border-color: var(--primario);
+    color: var(--sobre-primario);
+    font-weight: 650;
 }
 
 .chip[aria-pressed="true"]:hover {
     background: var(--primario-hover);
     border-color: var(--primario-hover);
-    color: #fff;
+    color: var(--sobre-primario);
 }
 
 .contador-tareas {
@@ -1244,17 +1441,18 @@ svg {
     padding: 0 16px;
     border: 1px solid transparent;
     border-radius: var(--radio-p);
-    background: var(--primario-fuerte);
-    color: #fff;
+    background: linear-gradient(135deg, var(--primario), var(--primario-fuerte));
+    color: var(--sobre-primario);
     font-size: 0.9rem;
-    font-weight: 600;
+    font-weight: 650;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgb(63 92 224 / 22%);
-    transition: background 150ms ease, transform 100ms ease, box-shadow 150ms ease;
+    box-shadow: var(--sombra-primario);
+    transition: filter 150ms ease, transform 100ms ease, box-shadow 150ms ease;
 }
 
 .boton:hover {
-    background: var(--primario-hover);
+    background: linear-gradient(135deg, var(--primario), var(--primario-fuerte));
+    filter: brightness(1.06);
 }
 
 .boton:active {
@@ -1354,6 +1552,7 @@ svg {
     width: 52px;
     height: 52px;
     margin-bottom: 4px;
+    border: 1px solid var(--primario-borde);
     border-radius: 50%;
     background: var(--primario-suave);
     color: var(--primario-texto);
@@ -1411,6 +1610,11 @@ svg {
     padding: 26px 4px;
     color: var(--texto-suave);
     font-size: 0.92rem;
+}
+
+.cargando--compacto {
+    padding: 18px 2px;
+    font-size: 0.88rem;
 }
 
 /* Cuando la carga ocupa una vista completa, se presenta como una tarjeta. */
@@ -1937,30 +2141,76 @@ svg {
     }
 
     .progreso {
-        gap: 10px;
+        gap: 16px;
+    }
+
+    .progreso-anillo {
+        width: 108px;
+        height: 108px;
+    }
+
+    .progreso-anillo::before {
+        inset: 9px;
+    }
+
+    .progreso-porcentaje {
+        font-size: 1.3rem;
     }
 
     .progreso-detalle {
-        font-size: 0.84rem;
+        font-size: 0.86rem;
     }
 
-    .carga-grafico {
+    .fila-hoy {
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .boton-completar {
+        padding: 0 10px;
+    }
+
+    .grafico-barras {
         gap: 5px;
     }
 
-    .carga-pista {
+    .grafico-pista {
         height: 82px;
-        padding: 3px;
+        padding: 2px;
     }
 
-    .carga-etiqueta {
-        font-size: 0.66rem;
+    .grafico-etiqueta {
+        font-size: 0.64rem;
+    }
+}
+
+@media (max-width: 1023px) {
+    .rejilla-analitica--resumen,
+    .rejilla-analitica--foco {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 780px) {
     .rejilla-analitica {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .boton-completar-texto {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        clip-path: inset(50%);
+    }
+
+    .boton-completar {
+        width: 36px;
+        padding: 0;
     }
 }
 

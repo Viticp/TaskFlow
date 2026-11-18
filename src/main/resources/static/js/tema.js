@@ -11,8 +11,8 @@
 const CLAVE = 'taskflow-tema';
 const OSCURO = 'oscuro';
 const CLARO = 'claro';
-const COLOR_CLARO = '#f5f6fa';
-const COLOR_OSCURO = '#0f1420';
+const COLOR_CLARO = '#f3f6fb';
+const COLOR_OSCURO = '#0b0f19';
 
 const raiz = document.documentElement;
 const boton = document.getElementById('cambiador-tema');

@@ -12,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -81,7 +83,8 @@ class TareaControllerTest {
                 .andExpect(jsonPath("$.titulo").value("Con fecha"))
                 .andExpect(jsonPath("$.prioridad").value("MEDIA"))
                 .andExpect(jsonPath("$.estado").value("EN_PROCESO"))
-                .andExpect(jsonPath("$.fechaLimite").value("2027-03-01"));
+                .andExpect(jsonPath("$.fechaLimite").value("2027-03-01"))
+                .andExpect(jsonPath("$.completadoEn").value(nullValue()));
     }
 
     @Test
@@ -117,7 +120,39 @@ class TareaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(cuerpo))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.estado").value("PENDIENTE"));
+                .andExpect(jsonPath("$.estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.completadoEn").value(nullValue()));
+    }
+
+    @Test
+    void creaUnaTareaCompletadaConFechaDeFinalizacion() throws Exception {
+        String cuerpo = """
+                {"titulo": "Ya hecha", "prioridad": "MEDIA", "estado": "COMPLETADA"}
+                """;
+
+        mockMvc.perform(post("/api/tareas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpo))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.estado").value("COMPLETADA"))
+                .andExpect(jsonPath("$.completadoEn").value(endsWith("Z")));
+    }
+
+    @Test
+    void reabrirUnaTareaBorraSuFechaDeFinalizacion() throws Exception {
+        Tarea completada = repositorio.save(new Tarea(
+                "Completada", null, Prioridad.MEDIA, Estado.COMPLETADA, null));
+
+        String cuerpo = """
+                {"titulo": "Completada", "prioridad": "MEDIA", "estado": "EN_PROCESO"}
+                """;
+
+        mockMvc.perform(put("/api/tareas/{id}", completada.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("EN_PROCESO"))
+                .andExpect(jsonPath("$.completadoEn").value(nullValue()));
     }
 
     @Test
@@ -190,7 +225,8 @@ class TareaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.titulo").value("Actualizada"))
                 .andExpect(jsonPath("$.estado").value("COMPLETADA"))
-                .andExpect(jsonPath("$.fechaLimite").value("2027-06-30"));
+                .andExpect(jsonPath("$.fechaLimite").value("2027-06-30"))
+                .andExpect(jsonPath("$.completadoEn").value(endsWith("Z")));
     }
 
     @Test

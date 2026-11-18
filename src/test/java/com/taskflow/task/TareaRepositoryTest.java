@@ -40,6 +40,17 @@ class TareaRepositoryTest {
         assertThat(recuperada.getPrioridad()).isEqualTo(Prioridad.ALTA);
         assertThat(recuperada.getEstado()).isEqualTo(Estado.PENDIENTE);
         assertThat(recuperada.getFechaLimite()).isEqualTo(LocalDate.of(2026, 12, 31));
+        assertThat(recuperada.getCompletadoEn()).isNull();
+    }
+
+    @Test
+    void guardaLaFechaDeFinalizacionDeUnaTareaCompletada() {
+        Tarea guardada = repositorio.save(new Tarea(
+                "Terminada", null, Prioridad.MEDIA, Estado.COMPLETADA, null));
+
+        Tarea recuperada = repositorio.findById(guardada.getId()).orElseThrow();
+
+        assertThat(recuperada.getCompletadoEn()).isNotNull();
     }
 
     @Test

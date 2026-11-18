@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard · VPlan</title>
     <meta name="description" content="VPlan: gestor de tareas personales de Victor.">
-    <meta name="theme-color" content="#f5f6fa" id="meta-tema">
+    <meta name="theme-color" content="#f3f6fb" id="meta-tema">
     <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/css/estilos.css">
     <script>
@@ -24,7 +24,7 @@
                 document.documentElement.setAttribute('data-theme', 'oscuro');
                 var meta = document.getElementById('meta-tema');
                 if (meta) {
-                    meta.setAttribute('content', '#0f1420');
+                    meta.setAttribute('content', '#0b0f19');
                 }
             }
         }());
@@ -162,13 +162,20 @@
 
         <!-- ======== VISTA: DASHBOARD ======== -->
         <section class="vista" id="vista-dashboard" aria-labelledby="titulo-dashboard">
-            <header class="cabecera-vista">
-                <h1 class="saludo" id="titulo-dashboard" tabindex="-1">¡Buenos días, Victor!</h1>
-                <p class="subtitulo">Aquí tienes el resumen de tus tareas.</p>
+            <header class="cabecera-vista cabecera-con-accion">
+                <div>
+                    <p class="sobre-titulo">Panel personal</p>
+                    <h1 class="saludo" id="titulo-dashboard" tabindex="-1">¡Buenos días, Victor!</h1>
+                    <p class="subtitulo">Tu plan de hoy y el avance de la semana.</p>
+                </div>
+                <button class="boton" type="button" data-abrir-crear>
+                    <svg class="icono" aria-hidden="true"><use href="#icono-mas"/></svg>
+                    Nueva tarea
+                </button>
             </header>
 
             <div class="rejilla-estadisticas">
-                <article class="tarjeta-estadistica">
+                <article class="tarjeta-estadistica tarjeta-estadistica--pendiente">
                     <span class="estadistica-icono" aria-hidden="true">
                         <svg class="icono" aria-hidden="true"><use href="#icono-reloj"/></svg>
                     </span>
@@ -177,7 +184,7 @@
                     <p class="estadistica-nota" id="nota-pendientes">Cargando…</p>
                 </article>
 
-                <article class="tarjeta-estadistica">
+                <article class="tarjeta-estadistica tarjeta-estadistica--proceso">
                     <span class="estadistica-icono estadistica-icono--proceso" aria-hidden="true">
                         <svg class="icono" aria-hidden="true"><use href="#icono-progreso"/></svg>
                     </span>
@@ -186,7 +193,7 @@
                     <p class="estadistica-nota" id="nota-en-proceso">Cargando…</p>
                 </article>
 
-                <article class="tarjeta-estadistica">
+                <article class="tarjeta-estadistica tarjeta-estadistica--completada">
                     <span class="estadistica-icono estadistica-icono--exito" aria-hidden="true">
                         <svg class="icono" aria-hidden="true"><use href="#icono-completada"/></svg>
                     </span>
@@ -196,21 +203,25 @@
                 </article>
             </div>
 
-            <div class="rejilla-analitica">
-                <section class="bloque bloque--analitica" aria-labelledby="titulo-progreso">
+            <div class="rejilla-analitica rejilla-analitica--resumen">
+                <section class="bloque bloque--analitica bloque--progreso" aria-labelledby="titulo-progreso">
                     <div class="bloque-cabecera">
                         <h2 class="bloque-titulo" id="titulo-progreso">Progreso general</h2>
                     </div>
                     <div class="progreso">
-                        <p class="progreso-porcentaje" id="progreso-porcentaje">–</p>
-                        <p class="progreso-detalle" id="progreso-detalle">Cargando…</p>
+                        <div class="progreso-anillo" id="progreso-anillo" role="progressbar"
+                             aria-labelledby="titulo-progreso" aria-valuemin="0" aria-valuemax="100"
+                             aria-valuenow="0">
+                            <span class="progreso-contenido">
+                                <span class="progreso-porcentaje" id="progreso-porcentaje">–</span>
+                                <span class="progreso-unidad">completado</span>
+                            </span>
+                        </div>
+                        <div class="progreso-info">
+                            <p class="progreso-detalle" id="progreso-detalle">Cargando…</p>
+                            <p class="progreso-nota" id="progreso-nota">Calculando el avance…</p>
+                        </div>
                     </div>
-                    <div class="progreso-pista" id="progreso-barra" role="progressbar"
-                         aria-labelledby="titulo-progreso" aria-valuemin="0" aria-valuemax="100"
-                         aria-valuenow="0">
-                        <span class="progreso-relleno" id="progreso-relleno"></span>
-                    </div>
-                    <p class="analitica-nota" id="progreso-nota">Calculando el avance…</p>
                 </section>
 
                 <section class="bloque bloque--analitica" aria-labelledby="titulo-vencimientos">
@@ -239,8 +250,45 @@
                 </section>
             </div>
 
-            <div class="rejilla-analitica">
-                <section class="bloque bloque--analitica" aria-labelledby="titulo-prioridad">
+            <div class="rejilla-analitica rejilla-analitica--foco">
+                <section class="bloque bloque--hoy" aria-labelledby="titulo-hoy">
+                    <div class="bloque-cabecera">
+                        <h2 class="bloque-titulo" id="titulo-hoy" tabindex="-1">Para hoy</h2>
+                        <span class="analitica-insignia" id="total-hoy">–</span>
+                    </div>
+                    <p class="analitica-nota">Tareas con fecha límite hoy.</p>
+
+                    <div class="cargando cargando--compacto" id="carga-hoy" role="status">
+                        <span class="cargador" aria-hidden="true"></span>
+                        <span>Cargando…</span>
+                    </div>
+
+                    <ul class="lista-hoy" id="lista-hoy" hidden></ul>
+
+                    <div class="estado-vacio estado-vacio--compacto" id="vacio-hoy" hidden>
+                        <span class="estado-vacio-icono" aria-hidden="true">
+                            <svg class="icono" aria-hidden="true"><use href="#icono-completada"/></svg>
+                        </span>
+                        <h3 class="estado-vacio-titulo" id="titulo-vacio-hoy">Nada para hoy</h3>
+                        <p class="estado-vacio-texto" id="texto-vacio-hoy">No tienes tareas con fecha límite hoy.</p>
+                        <button class="boton boton-secundario" type="button" data-abrir-crear>Nueva tarea</button>
+                    </div>
+                </section>
+
+                <section class="bloque bloque--semana" aria-labelledby="titulo-semana">
+                    <div class="bloque-cabecera">
+                        <h2 class="bloque-titulo" id="titulo-semana">Completadas · últimos 7 días</h2>
+                        <span class="analitica-insignia" id="total-semana">–</span>
+                    </div>
+                    <div class="grafico-barras" id="grafico-semana" role="group"
+                         aria-label="Tareas completadas por día en los últimos siete días"></div>
+                    <p class="analitica-vacio" id="semana-vacio">Cargando…</p>
+                    <p class="analitica-nota" id="semana-nota">Se cuenta el día en que completas cada tarea.</p>
+                </section>
+            </div>
+
+            <div class="rejilla-analitica rejilla-analitica--final">
+                <section class="bloque bloque--prioridad" aria-labelledby="titulo-prioridad">
                     <div class="bloque-cabecera">
                         <h2 class="bloque-titulo" id="titulo-prioridad">Distribución por prioridad</h2>
                         <span class="analitica-insignia" id="total-prioridad">–</span>
@@ -264,77 +312,38 @@
                     </ul>
                 </section>
 
-                <section class="bloque bloque--analitica" aria-labelledby="titulo-estado">
+                <section class="bloque bloque--siguientes" aria-labelledby="titulo-proximas">
                     <div class="bloque-cabecera">
-                        <h2 class="bloque-titulo" id="titulo-estado">Distribución por estado</h2>
-                        <span class="analitica-insignia" id="total-estado">–</span>
+                        <h2 class="bloque-titulo" id="titulo-proximas">Siguientes tareas</h2>
+                        <a class="enlace" href="#/tareas">Ver todas</a>
                     </div>
-                    <div class="barra-apilada" id="barra-apilada-estado" aria-hidden="true">
-                        <span class="barra-apilada-segmento barra-apilada--pendiente" data-segmento="PENDIENTE"></span>
-                        <span class="barra-apilada-segmento barra-apilada--proceso" data-segmento="EN_PROCESO"></span>
-                        <span class="barra-apilada-segmento barra-apilada--completada" data-segmento="COMPLETADA"></span>
+                    <p class="analitica-nota">Pendientes que no vencen hoy.</p>
+
+                    <div class="cargando cargando--compacto" id="carga-dashboard" role="status">
+                        <span class="cargador" aria-hidden="true"></span>
+                        <span>Cargando tus tareas…</span>
                     </div>
-                    <ul class="distribucion" aria-label="Tareas por estado">
-                        <li class="distribucion-fila" data-distribucion="estado" data-valor="PENDIENTE">
-                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--pendiente"></span>Pendiente</span>
-                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--pendiente" data-barra></span></span>
-                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
-                        </li>
-                        <li class="distribucion-fila" data-distribucion="estado" data-valor="EN_PROCESO">
-                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--proceso"></span>En proceso</span>
-                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--proceso" data-barra></span></span>
-                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
-                        </li>
-                        <li class="distribucion-fila" data-distribucion="estado" data-valor="COMPLETADA">
-                            <span class="distribucion-etiqueta"><span class="distribucion-punto distribucion-punto--completada"></span>Completada</span>
-                            <span class="distribucion-pista" aria-hidden="true"><span class="distribucion-relleno distribucion-relleno--completada" data-barra></span></span>
-                            <span class="distribucion-datos"><span class="distribucion-cantidad" data-cantidad>–</span><span class="distribucion-porcentaje" data-porcentaje>–</span></span>
-                        </li>
-                    </ul>
+
+                    <div class="panel-error" id="error-dashboard" role="alert" hidden>
+                        <div class="panel-error-texto">
+                            <p class="panel-error-titulo">No se pudieron cargar las tareas</p>
+                            <p id="texto-error-dashboard"></p>
+                        </div>
+                        <button class="boton boton-secundario" type="button" id="reintentar-dashboard">Reintentar</button>
+                    </div>
+
+                    <ul class="lista-compacta" id="lista-proximas" hidden></ul>
+
+                    <div class="estado-vacio estado-vacio--compacto" id="vacio-dashboard" hidden>
+                        <span class="estado-vacio-icono" aria-hidden="true">
+                            <svg class="icono" aria-hidden="true"><use href="#icono-completada"/></svg>
+                        </span>
+                        <h3 class="estado-vacio-titulo" id="titulo-vacio-dashboard">No hay más tareas pendientes</h3>
+                        <p class="estado-vacio-texto" id="texto-vacio-dashboard">Cuando crees una tarea sin completar, aparecerá aquí ordenada por fecha límite.</p>
+                        <button class="boton boton-secundario" type="button" data-abrir-crear>Crear una tarea</button>
+                    </div>
                 </section>
             </div>
-
-            <section class="bloque bloque--analitica bloque--carga" aria-labelledby="titulo-carga">
-                <div class="bloque-cabecera">
-                    <h2 class="bloque-titulo" id="titulo-carga">Carga de los próximos 7 días</h2>
-                    <span class="analitica-insignia" id="total-carga">–</span>
-                </div>
-                <p class="analitica-nota">Tareas sin completar con fecha límite, desde mañana hasta dentro de una semana.</p>
-                <div class="carga-grafico" id="carga-grafico" role="group"
-                     aria-label="Tareas pendientes por día en los próximos 7 días"></div>
-                <p class="analitica-vacio" id="carga-vacio">Cargando…</p>
-            </section>
-
-            <section class="bloque" aria-labelledby="titulo-proximas">
-                <div class="bloque-cabecera">
-                    <h2 class="bloque-titulo" id="titulo-proximas">Próximas tareas</h2>
-                    <a class="enlace" href="#/tareas">Ver todas</a>
-                </div>
-
-                <div class="cargando" id="carga-dashboard" role="status">
-                    <span class="cargador" aria-hidden="true"></span>
-                    <span>Cargando tus tareas…</span>
-                </div>
-
-                <div class="panel-error" id="error-dashboard" role="alert" hidden>
-                    <div class="panel-error-texto">
-                        <p class="panel-error-titulo">No se pudieron cargar las tareas</p>
-                        <p id="texto-error-dashboard"></p>
-                    </div>
-                    <button class="boton boton-secundario" type="button" id="reintentar-dashboard">Reintentar</button>
-                </div>
-
-                <ul class="lista-compacta" id="lista-proximas" hidden></ul>
-
-                <div class="estado-vacio estado-vacio--compacto" id="vacio-dashboard" hidden>
-                    <span class="estado-vacio-icono" aria-hidden="true">
-                        <svg class="icono" aria-hidden="true"><use href="#icono-completada"/></svg>
-                    </span>
-                    <h2 class="estado-vacio-titulo" id="titulo-vacio-dashboard">No hay tareas pendientes</h2>
-                    <p class="estado-vacio-texto" id="texto-vacio-dashboard">Cuando crees una tarea sin completar, aparecerá aquí ordenada por fecha límite.</p>
-                    <button class="boton boton-secundario" type="button" data-abrir-crear>Crear una tarea</button>
-                </div>
-            </section>
         </section>
 
         <!-- ======== VISTA: MIS TAREAS ======== -->
@@ -523,6 +532,22 @@
             <span class="fila-compacta-fecha-texto"></span>
         </p>
         <span class="pastilla pastilla-prioridad"></span>
+    </li>
+</template>
+
+<template id="plantilla-hoy">
+    <li class="fila-hoy">
+        <div class="fila-hoy-texto">
+            <p class="fila-hoy-titulo"></p>
+            <div class="fila-hoy-meta">
+                <span class="pastilla pastilla-prioridad"></span>
+                <span class="pastilla pastilla--estado pastilla-estado"></span>
+            </div>
+        </div>
+        <button class="boton boton-completar" type="button" data-completar>
+            <svg class="icono" aria-hidden="true"><use href="#icono-completada"/></svg>
+            <span class="boton-completar-texto">Completar</span>
+        </button>
     </li>
 </template>
 

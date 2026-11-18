@@ -2,9 +2,16 @@ VPlan
 
 Mi gestor de tareas personal: una aplicación web full stack con API REST en Java (Spring Boot), base de datos MySQL y un frontend en HTML, CSS y JavaScript sin frameworks. Lo hice como proyecto de portafolio del ciclo de DAW (Desarrollo de Aplicaciones Web).
 
-Dashboard de VPlan en tema claro
+![Dashboard de VPlan en tema claro](docs/capturas/vplan-dashboard-claro-1440.png)
 
-<!-- Ajusta la ruta a tu captura real -->
+| Tema oscuro | Vista de tareas |
+|---|---|
+| ![Dashboard de VPlan en tema oscuro](docs/capturas/vplan-dashboard-oscuro-1440.png) | ![Listado de tareas de VPlan](docs/capturas/vplan-tareas-1440.png) |
+
+| Móvil claro (390 px) | Móvil oscuro (390 px) |
+|---|---|
+| ![Dashboard móvil en tema claro](docs/capturas/vplan-dashboard-claro-390.png) | ![Dashboard móvil en tema oscuro](docs/capturas/vplan-dashboard-oscuro-390.png) |
+
 Qué hace
 CRUD de tareas: crear, ver, editar y borrar.
 Prioridad (alta, media, baja), estado (pendiente, en proceso, completada) y fecha límite.
